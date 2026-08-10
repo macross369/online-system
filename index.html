@@ -3,286 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ 諸葛互動搶答系統 | 專業競賽版</title>
+    <title>🏮 閒雲小築線上搶答 | 智慧競技系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap');
         
         :root {
-            --accent: #10b981;
-            --danger: #f43f5e;
-            --bg-dark: #0f172a;
+            --primary: #2d5a27;
+            --secondary: #e9e5d9;
+            --accent: #d97706;
+            --danger: #991b1b;
         }
 
         body { 
-            font-family: 'Noto Sans TC', sans-serif; 
-            background-color: var(--bg-dark);
+            font-family: 'Noto Serif TC', serif; 
+            background-color: #f4f1ea;
+            color: #1a202c;
             overscroll-behavior: none;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        .bamboo-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #d1cebd;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
 
-        .buzzer-glow {
-            box-shadow: 0 0 50px rgba(16, 185, 129, 0.4);
-            animation: buzzer-pulse 2s infinite;
+        .btn-green { background-color: var(--primary); color: white; }
+        .btn-green:hover { background-color: #1e3f1a; }
+
+        .rank-bar {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, #d1cebd 0%, var(--primary) 100%);
         }
 
-        @keyframes buzzer-pulse {
-            0% { transform: scale(1); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
-            50% { transform: scale(1.02); box-shadow: 0 0 60px rgba(16, 185, 129, 0.6); }
-            100% { transform: scale(1); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        @keyframes pulse-light {
+            0% { box-shadow: 0 0 0 0 rgba(45, 90, 39, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(45, 90, 39, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(45, 90, 39, 0); }
         }
+        .active-glow { animation: pulse-light 2s infinite; }
 
-        .shake { animation: shake-anim 0.4s ease-in-out; }
-        @keyframes shake-anim {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            50% { transform: translateX(8px); }
-            75% { transform: translateX(-8px); }
-        }
-
-        /* 隱藏滾動條但保持功能 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .rank-transition { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen">
+<body class="min-h-screen">
 
-    <!-- 頂部導航列 -->
-    <nav class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/5">
+    <!-- 頂部導航 -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
-                <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/40">
-                    <span class="text-xl">⚔️</span>
-                </div>
+                <div class="w-10 h-10 bg-[#2d5a27] rounded-lg flex items-center justify-center text-white text-xl">🏮</div>
                 <div>
-                    <h1 class="font-black text-lg leading-tight tracking-wider">諸葛搶答</h1>
-                    <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Master Quiz Engine</span>
+                    <h1 class="font-black text-xl tracking-wide text-stone-800">閒雲小築</h1>
+                    <span class="text-[10px] text-stone-500 font-bold uppercase tracking-widest">線上互動搶答系統</span>
                 </div>
             </div>
-            <div id="status-display" class="px-4 py-1.5 rounded-full bg-slate-800/50 border border-white/5 text-xs font-medium flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-slate-500" id="status-dot"></span>
-                <span id="status-text">系統待命</span>
+            <div id="status-display" class="px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-[12px] flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-stone-400" id="status-dot"></span>
+                <span id="status-text" class="text-stone-600 font-medium">連線準備中</span>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 py-6 md:py-10">
+    <main class="max-w-7xl mx-auto px-4 py-8">
 
-        <!-- [區塊 1] 入口引導：美化的角色選擇 -->
+        <!-- 角色選擇 -->
         <section id="view-landing" class="space-y-12 py-10">
             <div class="text-center space-y-4">
-                <h2 class="text-4xl md:text-6xl font-black tracking-tighter text-white">智慧競技，一觸即發</h2>
-                <p class="text-slate-400 max-w-2xl mx-auto text-lg">穩定、極速、專業。為課堂與活動打造的電競級搶答系統。</p>
+                <h2 class="text-4xl md:text-5xl font-black text-stone-800">雅座雅敘，智慧交鋒</h2>
+                <p class="text-stone-500 max-w-xl mx-auto italic">歡迎來到閒雲小築。請選擇您的身分開始這場友誼競賽。</p>
             </div>
             <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <div onclick="app.initRole('teacher')" class="glass-panel p-10 rounded-[2.5rem] cursor-pointer hover:bg-slate-800/60 transition-all group border-b-4 border-indigo-500/50">
-                    <div class="text-6xl mb-6 group-hover:scale-110 transition-transform">🏛️</div>
-                    <h3 class="text-2xl font-bold mb-2">我是主持人</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">建立房間、展示大屏、掌控題目節奏、評分結算。</p>
+                <div onclick="app.initRole('teacher')" class="bamboo-panel p-10 rounded-3xl cursor-pointer hover:shadow-xl transition-all border-t-4 border-[#2d5a27]">
+                    <div class="text-5xl mb-4">🍵</div>
+                    <h3 class="text-2xl font-bold mb-2">我是築主 (主持人)</h3>
+                    <p class="text-stone-500 text-sm">建立房間、展示大屏看板、掌控競賽節奏與計分。</p>
                 </div>
-                <div onclick="app.initRole('student')" class="glass-panel p-10 rounded-[2.5rem] cursor-pointer hover:bg-slate-800/60 transition-all group border-b-4 border-emerald-500/50">
-                    <div class="text-6xl mb-6 group-hover:scale-110 transition-transform">📱</div>
-                    <h3 class="text-2xl font-bold mb-2 text-emerald-400">我是參賽者</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">掃描加入、急速按鈕、獲取積分、稱霸榜單。</p>
+                <div onclick="app.initRole('student')" class="bamboo-panel p-10 rounded-3xl cursor-pointer hover:shadow-xl transition-all border-t-4 border-[#d97706]">
+                    <div class="text-5xl mb-4">🀄</div>
+                    <h3 class="text-2xl font-bold mb-2">我是上賓 (參賽者)</h3>
+                    <p class="text-stone-500 text-sm">輸入房號加入競賽，挑戰最快手速獲得最高榮譽。</p>
                 </div>
             </div>
         </section>
 
-        <!-- [區塊 2] 教師端設定介面 -->
+        <!-- 主持人設定 -->
         <section id="view-teacher-setup" class="hidden max-w-md mx-auto">
-            <div class="glass-panel p-8 rounded-[2rem] space-y-6">
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="text-2xl">⚙️</span>
-                    <h3 class="text-xl font-bold">建立競賽房間</h3>
-                </div>
+            <div class="bamboo-panel p-8 rounded-3xl space-y-6">
+                <h3 class="text-xl font-bold border-b pb-2">開設新局</h3>
                 <div class="space-y-4">
                     <div>
-                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">總題數</label>
-                        <input type="number" id="inp-total-q" value="5" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                        <label class="text-xs font-bold text-stone-500 mb-1 block">預計競賽題數</label>
+                        <input type="number" id="inp-total-q" value="5" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 outline-none focus:border-[#2d5a27]">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">搶答倒數 (秒)</label>
-                        <input type="number" id="inp-limit" value="7" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                        <label class="text-xs font-bold text-stone-500 mb-1 block">每題搶答限時 (秒)</label>
+                        <input type="number" id="inp-limit" value="10" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 outline-none focus:border-[#2d5a27]">
                     </div>
-                    <button onclick="app.teacherCreateRoom()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-black text-lg shadow-xl shadow-emerald-600/20 transition-all active:scale-95">啟動戰場大屏</button>
+                    <button onclick="app.teacherCreateRoom()" class="w-full btn-green py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-all">開啟搶答大屏</button>
                 </div>
             </div>
         </section>
 
-        <!-- [區塊 3] 教師端控制主屏 -->
-        <section id="view-teacher-dash" class="hidden space-y-8">
-            <div class="grid lg:grid-cols-12 gap-8">
-                <!-- 左側：控制核心 -->
+        <!-- 主持人主屏 -->
+        <section id="view-teacher-dash" class="hidden space-y-6">
+            <div class="grid lg:grid-cols-12 gap-6">
+                <!-- 左側：搶答核心區域 -->
                 <div class="lg:col-span-8 space-y-6">
-                    <div class="glass-panel p-6 rounded-3xl flex items-center justify-between">
-                        <div class="space-y-1">
-                            <span class="text-[10px] text-slate-500 font-black tracking-widest uppercase">Room ID</span>
-                            <h2 id="room-id-display" class="text-4xl font-black text-emerald-400 tracking-tighter">----</h2>
+                    <div class="bamboo-panel p-6 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-stone-400 font-bold tracking-widest uppercase">房間號碼</span>
+                            <h2 id="room-id-display" class="text-4xl font-black text-[#2d5a27]">----</h2>
                         </div>
-                        <div class="text-right space-y-1">
-                            <span class="text-[10px] text-slate-500 font-black tracking-widest uppercase">Progress</span>
-                            <h2 id="room-prog-display" class="text-2xl font-black text-white">第 1 / 5 題</h2>
+                        <div class="text-right">
+                            <span class="text-[10px] text-stone-400 font-bold tracking-widest uppercase">競賽進度</span>
+                            <h2 id="room-prog-display" class="text-xl font-bold text-stone-700">準備中</h2>
                         </div>
                     </div>
 
-                    <!-- 互動大舞台 -->
-                    <div id="main-stage" class="glass-panel min-h-[500px] rounded-[3rem] p-10 flex flex-col items-center justify-center relative overflow-hidden">
-                        <!-- 裝飾背景網格 -->
-                        <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 30px 30px;"></div>
-                        
-                        <!-- A. 準備階段 (Lobby) -->
-                        <div id="stage-lobby" class="text-center space-y-8 z-10">
-                            <div class="space-y-2">
-                                <h3 class="text-3xl font-black">等待參賽者集結...</h3>
-                                <p class="text-slate-400">目前已有 <span id="lobby-count" class="text-emerald-400 font-bold">0</span> 位參賽者加入</p>
-                            </div>
-                            <div id="lobby-tags" class="flex flex-wrap justify-center gap-3 max-w-2xl no-scrollbar overflow-y-auto max-h-32 p-2">
-                                <!-- 學生名單標籤 -->
-                            </div>
+                    <div id="main-stage" class="bamboo-panel min-h-[480px] rounded-[2.5rem] p-8 flex flex-col items-center justify-center relative">
+                        <!-- 準備大廳 -->
+                        <div id="stage-lobby" class="text-center space-y-8 w-full">
+                            <h3 class="text-3xl font-black text-stone-800">等待賓客入座...</h3>
+                            <div id="lobby-tags" class="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto"></div>
                             <div class="flex flex-wrap justify-center gap-4">
-                                <button onclick="app.toggleQR(true)" class="px-6 py-3 rounded-xl bg-slate-800 font-bold border border-white/5 hover:bg-slate-700 transition-all">📱 顯示 QR Code</button>
-                                <button onclick="app.startBuzzing()" class="px-12 py-3 rounded-xl bg-emerald-600 font-black text-xl shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 transition-all">⚡ 開放搶答！</button>
+                                <button onclick="app.toggleQR(true)" class="px-6 py-3 rounded-xl border border-stone-300 hover:bg-white transition-all font-bold">顯示二維碼</button>
+                                <button id="btn-start-buzz" onclick="app.startBuzzing()" class="px-12 py-3 rounded-xl btn-green font-bold text-xl shadow-lg hover:scale-105 transition-all">⚡ 開始搶答</button>
                             </div>
                         </div>
 
-                        <!-- B. 搶答中 (Buzzing) -->
-                        <div id="stage-buzzing" class="hidden text-center space-y-6 z-10">
-                            <p class="text-emerald-400 font-black animate-pulse tracking-[0.3em] uppercase">搶答中 · Buzzing Now</p>
-                            <h1 id="timer-display" class="text-[12rem] font-black leading-none text-white tracking-tighter">05</h1>
-                            <button onclick="app.stopBuzzing()" class="px-8 py-2 rounded-lg bg-rose-600/20 text-rose-500 font-bold border border-rose-600/30">強制停止</button>
+                        <!-- 搶答進行中 -->
+                        <div id="stage-buzzing" class="hidden text-center space-y-6">
+                            <p class="text-[#2d5a27] font-black tracking-[0.3em] animate-pulse">搶答計時中</p>
+                            <h1 id="timer-display" class="text-[10rem] font-black leading-none text-stone-800">10</h1>
+                            <button onclick="app.stopBuzzing()" class="text-stone-400 text-sm underline">手動終止</button>
                         </div>
 
-                        <!-- C. 判定階段 (Review) -->
-                        <div id="stage-review" class="hidden text-center space-y-10 z-10 w-full max-w-xl">
-                            <div class="space-y-2">
-                                <p class="text-indigo-400 font-black tracking-widest uppercase text-sm">正在回答的英雄</p>
-                                <h2 id="candidate-name" class="text-6xl font-black text-white">---</h2>
+                        <!-- 判定結果 -->
+                        <div id="stage-review" class="hidden text-center space-y-10 w-full max-w-md">
+                            <div class="space-y-1">
+                                <p class="text-stone-400 font-bold text-sm">當前回答者</p>
+                                <h2 id="candidate-name" class="text-5xl font-black text-[#2d5a27]">---</h2>
                             </div>
                             <div class="grid grid-cols-2 gap-6">
-                                <button onclick="app.submitJudge(true)" class="py-8 rounded-3xl bg-emerald-600 font-black text-3xl shadow-xl shadow-emerald-600/30 hover:scale-105 transition-transform">⭕ 正確</button>
-                                <button onclick="app.submitJudge(false)" class="py-8 rounded-3xl bg-rose-600 font-black text-3xl shadow-xl shadow-rose-600/30 hover:scale-105 transition-transform">❌ 錯誤</button>
+                                <button onclick="app.submitJudge(true)" class="py-8 rounded-3xl bg-[#2d5a27] text-white font-bold text-3xl shadow-xl hover:scale-105 transition-all">對</button>
+                                <button onclick="app.submitJudge(false)" class="py-8 rounded-3xl bg-[#991b1b] text-white font-bold text-3xl shadow-xl hover:scale-105 transition-all">錯</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 右側：即時榜單 -->
+                <!-- 右側：側邊資訊看板 -->
                 <div class="lg:col-span-4 space-y-6">
-                    <div class="glass-panel p-6 rounded-3xl h-full flex flex-col">
-                        <h4 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-6 flex justify-between items-center">
+                    <!-- 榮譽榜 -->
+                    <div class="bamboo-panel p-6 rounded-2xl flex flex-col h-[350px]">
+                        <h4 class="text-sm font-bold text-stone-800 mb-4 flex justify-between">
                             <span>🏆 即時榮譽榜</span>
-                            <span id="total-student-label" class="bg-slate-800 px-2 py-0.5 rounded text-white italic">0 參與者</span>
+                            <span id="player-count" class="text-xs text-stone-400">0 人連線</span>
                         </h4>
                         <div id="leaderboard" class="flex-1 space-y-3 overflow-y-auto pr-1 no-scrollbar">
                             <!-- 榜單項目 -->
                         </div>
-                        <div class="mt-6 pt-6 border-t border-white/5">
-                            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">當前搶答序列</h4>
-                            <div id="buzz-queue" class="space-y-2 max-h-40 overflow-y-auto no-scrollbar">
-                                <!-- 序列項目 -->
-                            </div>
+                    </div>
+
+                    <!-- 搶答隊列 -->
+                    <div class="bamboo-panel p-6 rounded-2xl flex flex-col h-[220px]">
+                        <h4 class="text-sm font-bold text-stone-800 mb-4">⏳ 搶答順序</h4>
+                        <div id="buzz-queue" class="flex-1 space-y-2 overflow-y-auto no-scrollbar">
+                            <!-- 隊列項目 -->
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- [區塊 4] 學生端加入介面 -->
+        <!-- 學生加入頁面 -->
         <section id="view-student-join" class="hidden max-w-md mx-auto">
-            <div class="glass-panel p-8 rounded-[2rem] space-y-6">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">⚡</span>
-                    <h3 class="text-xl font-bold">連線至戰場</h3>
-                </div>
+            <div class="bamboo-panel p-8 rounded-3xl space-y-6">
+                <h3 class="text-xl font-bold border-b pb-2">加入雅敘</h3>
                 <div class="space-y-4">
                     <div>
-                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">房間號碼</label>
-                        <input type="text" id="inp-room-id" placeholder="例如: 1234" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-4 mt-1 text-2xl font-black text-center tracking-[0.5em] focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <label class="text-xs font-bold text-stone-500 mb-1 block">房間代碼</label>
+                        <input type="text" id="inp-room-id" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-4 text-2xl font-black text-center tracking-[0.3em]">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-500 uppercase ml-1">您的暱稱</label>
-                        <input type="text" id="inp-nickname" placeholder="例如: 小明" class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 mt-1 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <label class="text-xs font-bold text-stone-500 mb-1 block">您的暱稱</label>
+                        <input type="text" id="inp-nickname" maxlength="8" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 outline-none">
                     </div>
-                    <button onclick="app.studentJoin()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-black text-lg shadow-xl shadow-emerald-600/20 transition-all active:scale-95">加入大廳</button>
+                    <button onclick="app.studentJoin()" class="w-full btn-green py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-all">進入大廳</button>
                 </div>
             </div>
         </section>
 
-        <!-- [區塊 5] 學生端搶答控制器 -->
-        <section id="view-student-dash" class="hidden max-w-md mx-auto space-y-8">
-            <div class="flex justify-between items-center bg-slate-900/60 p-5 rounded-2xl border border-white/5">
+        <!-- 學生端搶答 -->
+        <section id="view-student-dash" class="hidden max-w-md mx-auto space-y-6">
+            <div class="flex justify-between items-center bg-white p-5 rounded-2xl border border-stone-200 shadow-sm">
                 <div>
-                    <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Player</span>
-                    <h4 id="my-name-display" class="font-black text-emerald-400">---</h4>
+                    <span class="text-[10px] text-stone-400 font-bold uppercase">參賽者</span>
+                    <h4 id="my-name-display" class="font-bold text-stone-800">---</h4>
                 </div>
                 <div class="text-right">
-                    <span class="text-[10px] text-slate-500 font-black uppercase tracking-widest">Points</span>
-                    <h4 id="my-score-display" class="text-2xl font-black text-white">0</h4>
+                    <span class="text-[10px] text-stone-400 font-bold uppercase">累計積分</span>
+                    <h4 id="my-score-display" class="text-2xl font-black text-[#2d5a27]">0</h4>
                 </div>
             </div>
 
-            <div id="penalty-bar" class="hidden bg-rose-600 text-white text-[10px] font-black text-center py-1 rounded-full animate-bounce">
-                ⚠️ 偷跑違規！按鈕鎖定中 ⚠️
+            <div id="penalty-msg" class="hidden text-center py-2 bg-red-100 text-red-700 rounded-full text-xs font-bold animate-bounce">
+                ⚠️ 偷跑違規！按鈕暫時鎖定 ⚠️
             </div>
 
-            <div class="flex justify-center items-center py-6">
-                <button id="main-buzzer" onclick="app.handleBuzzerClick()" class="w-72 h-72 rounded-full bg-slate-800 border-[16px] border-slate-700 flex flex-col items-center justify-center transition-all active:scale-90 disabled:opacity-50">
-                    <span id="buzzer-icon" class="text-7xl mb-2">⏳</span>
-                    <span id="buzzer-text" class="text-lg font-black text-slate-500 uppercase tracking-widest">等待中</span>
+            <div class="flex justify-center items-center py-10">
+                <button id="main-buzzer" onclick="app.handleBuzzerClick()" class="w-64 h-64 rounded-full bg-stone-200 border-[12px] border-stone-300 flex flex-col items-center justify-center transition-all active:scale-90 shadow-inner">
+                    <span id="buzzer-icon" class="text-6xl mb-2">⏳</span>
+                    <span id="buzzer-text" class="text-sm font-bold text-stone-400">靜候指令</span>
                 </button>
             </div>
-
-            <div class="text-center">
-                <p id="student-hint" class="text-sm text-slate-500 font-medium italic">保持螢幕開啟，等待搶答指令...</p>
-            </div>
+            <p id="student-hint" class="text-center text-xs text-stone-400 italic">請保持螢幕開啟，專注聽題...</p>
         </section>
 
-        <!-- [區塊 6] 最終結算結算 -->
+        <!-- 結算頁面 -->
         <section id="view-result" class="hidden max-w-2xl mx-auto py-10 text-center space-y-10">
-            <div class="relative inline-block">
-                <span class="text-8xl">🏆</span>
-                <div class="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full animate-pulse"></div>
-            </div>
-            <div class="space-y-2">
-                <h2 class="text-5xl font-black">競賽結束！</h2>
-                <p class="text-slate-400">榮耀屬於最終的強者</p>
-            </div>
-            
-            <div id="final-podium" class="glass-panel p-8 rounded-[3rem] space-y-4 text-left">
-                <!-- 頒獎台項目 -->
-            </div>
-
-            <button onclick="location.reload()" class="px-12 py-4 rounded-2xl bg-indigo-600 font-black text-xl hover:bg-indigo-500 transition-all">返回主頁</button>
+            <div class="text-8xl">🏆</div>
+            <h2 class="text-4xl font-black text-stone-800">本次競賽圓滿結束</h2>
+            <div id="final-podium" class="space-y-4"></div>
+            <button onclick="location.reload()" class="px-10 py-4 rounded-xl btn-green font-bold">返回首頁</button>
         </section>
+
     </main>
 
-    <!-- QR Code 彈出層 -->
-    <div id="modal-qr" class="hidden fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-6">
-        <div class="glass-panel p-10 rounded-[3rem] max-w-sm w-full text-center relative">
-            <button onclick="app.toggleQR(false)" class="absolute top-6 right-6 text-slate-500 hover:text-white text-xl">✕</button>
-            <h3 class="text-2xl font-black mb-6">掃描加入戰場</h3>
-            <div id="qr-container" class="bg-white p-6 rounded-3xl inline-block mb-6 shadow-2xl"></div>
-            <p class="text-sm text-slate-400 mb-2">房號：<span id="qr-room-text" class="text-emerald-400 font-black text-lg">----</span></p>
-            <div class="bg-slate-900 p-3 rounded-xl text-[10px] text-slate-600 break-all border border-white/5" id="qr-url-text">---</div>
+    <!-- 二維碼彈窗 -->
+    <div id="modal-qr" class="hidden fixed inset-0 z-[100] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-6">
+        <div class="bg-white p-8 rounded-3xl max-w-sm w-full text-center relative shadow-2xl">
+            <button onclick="app.toggleQR(false)" class="absolute top-4 right-4 text-stone-300 hover:text-stone-800 text-xl">✕</button>
+            <h3 class="text-xl font-bold mb-6">掃碼加入競賽</h3>
+            <div id="qr-container" class="inline-block p-2 border-4 border-stone-100 rounded-xl mb-4"></div>
+            <p class="text-sm text-stone-500">房間代碼：<span id="qr-room-text" class="text-[#2d5a27] font-black text-xl">----</span></p>
         </div>
     </div>
 
     <script>
         const app = {
             config: {
-                peerPrefix: 'GZ-QUIZ-PJS-', // 全球唯一前綴
-                colors: { accent: '#10b981', danger: '#f43f5e', neutral: '#64748b' }
+                peerPrefix: 'XYXZ-QUIZ-', // 唯一名前綴
+                colors: { accent: '#2d5a27', danger: '#991b1b', neutral: '#a8a29e' }
             },
             state: {
                 role: null,
@@ -292,10 +259,10 @@
                 studentInfo: { id: '', name: '', score: 0 },
                 isPenalty: false,
                 room: {
-                    status: 'IDLE', // IDLE, LOBBY, BUZZING, REVIEW, FINISHED
+                    status: '等待中', // 等待中, 搶答中, 判定中, 已結束
                     currentQ: 1,
                     totalQ: 5,
-                    limit: 7,
+                    limit: 10,
                     timer: 0,
                     students: [], // {id, name, score}
                     queue: [], // {id, name, timestamp, state}
@@ -315,39 +282,28 @@
             initRole: function(role) {
                 this.state.role = role;
                 document.getElementById('view-landing').classList.add('hidden');
-                this.updateStatus('初始化中...', 'neutral');
-                
-                if (role === 'teacher') {
-                    document.getElementById('view-teacher-setup').classList.remove('hidden');
-                } else {
-                    document.getElementById('view-student-join').classList.remove('hidden');
-                }
+                this.updateStatus('初始化...', 'neutral');
+                if (role === 'teacher') document.getElementById('view-teacher-setup').classList.remove('hidden');
+                else document.getElementById('view-student-join').classList.remove('hidden');
             },
 
-            // --- 教師邏輯 ---
+            // --- 主持人邏輯 ---
             teacherCreateRoom: function() {
                 const code = Math.floor(1000 + Math.random() * 8999).toString();
                 this.state.roomCode = code;
                 this.state.room.totalQ = parseInt(document.getElementById('inp-total-q').value) || 5;
-                this.state.room.limit = parseInt(document.getElementById('inp-limit').value) || 7;
-                this.state.room.status = 'LOBBY';
-
-                // 初始化 Peer (教師固定使用前綴+房號)
-                this.state.peer = new Peer(this.config.peerPrefix + code);
+                this.state.room.limit = parseInt(document.getElementById('inp-limit').value) || 10;
                 
-                this.state.peer.on('open', (id) => {
-                    this.updateStatus('大屏連線就緒', 'accent');
+                this.state.peer = new Peer(this.config.peerPrefix + code);
+                this.state.peer.on('open', () => {
+                    this.updateStatus('系統就緒', 'accent');
                     this.showTeacherDash();
                 });
-
                 this.state.peer.on('connection', (conn) => {
                     conn.on('data', (data) => this.handleTeacherData(data, conn));
-                    conn.on('close', () => this.handlePeerDisconnect(conn.peer));
                 });
-
-                this.state.peer.on('error', (err) => {
-                    console.error(err);
-                    alert('房間建立失敗！可能房號已被占用，請重新操作。');
+                this.state.peer.on('error', () => {
+                    alert('房間代碼衝突，請重新建立。');
                     location.reload();
                 });
             },
@@ -357,71 +313,61 @@
                 document.getElementById('view-teacher-dash').classList.remove('hidden');
                 document.getElementById('room-id-display').innerText = this.state.roomCode;
                 document.getElementById('qr-room-text').innerText = this.state.roomCode;
-                
                 const url = `${window.location.origin}${window.location.pathname}?room=${this.state.roomCode}`;
                 this.genQRCode(url);
-                document.getElementById('qr-url-text').innerText = url;
                 this.broadcast();
             },
 
             handleTeacherData: function(data, conn) {
                 const r = this.state.room;
                 if (data.type === 'JOIN') {
-                    this.state.connections[data.payload.id] = conn;
-                    if (!r.students.find(s => s.id === data.payload.id)) {
+                    // 杜絕重複：若暱稱已存在，移除舊的 ID 記錄，更新為新 ID
+                    const existingIdx = r.students.findIndex(s => s.name === data.payload.name);
+                    if (existingIdx !== -1) {
+                        r.students[existingIdx].id = data.payload.id;
+                    } else {
                         r.students.push({ id: data.payload.id, name: data.payload.name, score: 0 });
                     }
+                    this.state.connections[data.payload.id] = conn;
                     this.broadcast();
-                    this.playSound(440, 0.1);
+                    this.playSound(400, 0.1);
                 }
                 if (data.type === 'BUZZ') {
-                    if (r.status !== 'BUZZING') return;
+                    if (r.status !== '搶答中') return;
                     if (r.queue.find(q => q.id === data.payload.id)) return;
-                    
-                    r.queue.push({
-                        id: data.payload.id,
-                        name: data.payload.name,
-                        time: Date.now(),
-                        state: 'PENDING'
-                    });
-                    r.queue.sort((a, b) => a.time - b.time);
+                    r.queue.push({ id: data.payload.id, name: data.payload.name, time: Date.now(), state: '等待判定' });
+                    r.queue.sort((a,b) => a.time - b.time);
                     this.broadcast();
+                    this.playSound(600, 0.1);
                 }
             },
 
             broadcast: function() {
                 const packet = { type: 'SYNC', payload: this.state.room };
-                Object.values(this.state.connections).forEach(c => {
-                    if (c.open) c.send(packet);
-                });
+                Object.values(this.state.connections).forEach(c => { if(c.open) c.send(packet); });
                 this.renderTeacherUI();
             },
 
             startBuzzing: function() {
                 const r = this.state.room;
-                r.status = 'BUZZING';
+                r.status = '搶答中';
                 r.queue = [];
                 r.activeIdx = 0;
                 r.timer = r.limit;
-
-                if (this.clock) clearInterval(this.clock);
+                if(this.clock) clearInterval(this.clock);
                 this.clock = setInterval(() => {
                     r.timer--;
-                    if (r.timer <= 0) {
-                        clearInterval(this.clock);
-                        this.stopBuzzing();
-                    }
+                    if(r.timer <= 0) { this.stopBuzzing(); }
                     this.broadcast();
                 }, 1000);
-                
                 this.broadcast();
-                this.playSound(880, 0.2);
+                this.playSound(800, 0.2);
             },
 
             stopBuzzing: function() {
+                if(this.clock) clearInterval(this.clock);
                 const r = this.state.room;
-                if (this.clock) clearInterval(this.clock);
-                r.status = r.queue.length > 0 ? 'REVIEW' : 'LOBBY';
+                r.status = r.queue.length > 0 ? '判定中' : '等待中';
                 this.broadcast();
             },
 
@@ -433,189 +379,141 @@
                 if (isCorrect) {
                     const stu = r.students.find(s => s.id === current.id);
                     if (stu) stu.score++;
-                    current.state = 'CORRECT';
-                    
-                    if (r.currentQ >= r.totalQ) {
-                        r.status = 'FINISHED';
-                    } else {
-                        r.currentQ++;
-                        r.status = 'LOBBY';
-                    }
-                    this.playSound(1046, 0.3);
+                    current.state = '正確';
+                    if (r.currentQ >= r.totalQ) r.status = '已結束';
+                    else { r.currentQ++; r.status = '等待中'; }
+                    this.playSound(1000, 0.3);
                 } else {
-                    current.state = 'WRONG';
+                    current.state = '錯誤';
                     r.activeIdx++;
-                    if (r.activeIdx >= r.queue.length) {
-                        r.status = 'LOBBY';
-                    }
-                    this.playSound(220, 0.3);
+                    if (r.activeIdx >= r.queue.length) r.status = '等待中';
+                    this.playSound(200, 0.3);
                 }
                 this.broadcast();
             },
 
-            // --- 學生邏輯 ---
+            // --- 學生端邏輯 ---
             studentJoin: function() {
                 const code = document.getElementById('inp-room-id').value.trim();
                 const name = document.getElementById('inp-nickname').value.trim();
-                if (!code || !name) return alert('請填入房號與暱稱');
-
+                if(!code || !name) return alert('請完整填寫代碼與暱稱');
                 this.state.studentInfo.name = name;
-                this.state.peer = new Peer(); // 學生隨機產生 ID
-
+                this.state.peer = new Peer();
                 this.state.peer.on('open', (id) => {
                     this.state.studentInfo.id = id;
                     const conn = this.state.peer.connect(this.config.peerPrefix + code);
-                    this.registerStudentConn(conn);
-                });
-
-                this.state.peer.on('error', (err) => {
-                    alert('連線失敗！請確認房號是否正確。');
+                    this.setupStudentConn(conn);
                 });
             },
 
-            registerStudentConn: function(conn) {
+            setupStudentConn: function(conn) {
                 conn.on('open', () => {
                     conn.send({ type: 'JOIN', payload: { id: this.state.studentInfo.id, name: this.state.studentInfo.name }});
                     document.getElementById('view-student-join').classList.add('hidden');
                     document.getElementById('view-student-dash').classList.remove('hidden');
                     document.getElementById('my-name-display').innerText = this.state.studentInfo.name;
-                    this.updateStatus('已連線至戰場', 'accent');
                     this.state.connections['HOST'] = conn;
+                    this.updateStatus('已進入雅座', 'accent');
                 });
-
                 conn.on('data', (data) => {
-                    if (data.type === 'SYNC') {
-                        this.state.room = data.payload;
-                        this.renderStudentUI();
-                    }
-                });
-
-                conn.on('close', () => {
-                    alert('連線已中斷，請刷新頁面重試。');
-                    location.reload();
+                    if (data.type === 'SYNC') { this.state.room = data.payload; this.renderStudentUI(); }
                 });
             },
 
             handleBuzzerClick: function() {
                 if (this.state.isPenalty) return;
-                
                 const r = this.state.room;
-                if (r.status !== 'BUZZING') {
-                    // 處罰偷跑
+                if (r.status !== '搶答中') {
                     this.state.isPenalty = true;
-                    document.getElementById('penalty-bar').classList.remove('hidden');
-                    document.getElementById('main-buzzer').classList.add('shake');
+                    document.getElementById('penalty-msg').classList.remove('hidden');
                     this.playSound(150, 0.4);
                     setTimeout(() => {
                         this.state.isPenalty = false;
-                        document.getElementById('penalty-bar').classList.add('hidden');
-                        document.getElementById('main-buzzer').classList.remove('shake');
-                    }, 1500);
+                        document.getElementById('penalty-msg').classList.add('hidden');
+                    }, 2000);
                     return;
                 }
-
                 if (this.state.connections['HOST']) {
-                    this.state.connections['HOST'].send({
-                        type: 'BUZZ',
-                        payload: { id: this.state.studentInfo.id, name: this.state.studentInfo.name }
-                    });
-                    this.playSound(660, 0.1);
+                    this.state.connections['HOST'].send({ type: 'BUZZ', payload: { id: this.state.studentInfo.id, name: this.state.studentInfo.name }});
                 }
             },
 
-            // --- UI 繪製 ---
+            // --- UI 渲染優化 ---
             renderTeacherUI: function() {
                 const r = this.state.room;
-                document.getElementById('room-prog-display').innerText = `第 ${r.currentQ} / ${r.totalQ} 題`;
-                document.getElementById('lobby-count').innerText = r.students.length;
-                document.getElementById('total-student-label').innerText = `${r.students.length} 參與者`;
+                document.getElementById('room-prog-display').innerText = r.status === '已結束' ? '競賽結束' : `第 ${r.currentQ} / ${r.totalQ} 題`;
+                document.getElementById('player-count').innerText = `${r.students.length} 人連線`;
+                
+                document.getElementById('stage-lobby').classList.toggle('hidden', r.status !== '等待中');
+                document.getElementById('stage-buzzing').classList.toggle('hidden', r.status !== '搶答中');
+                document.getElementById('stage-review').classList.toggle('hidden', r.status !== '判定中');
+                document.getElementById('view-teacher-dash').classList.toggle('hidden', r.status === '已結束');
+                document.getElementById('view-result').classList.toggle('hidden', r.status !== '已結束');
 
-                // 切換階段可見性
-                document.getElementById('stage-lobby').classList.toggle('hidden', r.status !== 'LOBBY');
-                document.getElementById('stage-buzzing').classList.toggle('hidden', r.status !== 'BUZZING');
-                document.getElementById('stage-review').classList.toggle('hidden', r.status !== 'REVIEW');
-                document.getElementById('view-teacher-dash').classList.toggle('hidden', r.status === 'FINISHED');
-                document.getElementById('view-result').classList.toggle('hidden', r.status !== 'FINISHED');
-
-                // 渲染名單標籤
                 const lobbyTags = document.getElementById('lobby-tags');
-                lobbyTags.innerHTML = r.students.map(s => `<span class="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-xs font-bold border border-emerald-600/30">● ${s.name}</span>`).join('');
+                lobbyTags.innerHTML = r.students.map(s => `<span class="px-3 py-1 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold border border-stone-200">🍵 ${s.name}</span>`).join('');
 
-                // 渲染計時器
-                if (r.status === 'BUZZING') {
-                    document.getElementById('timer-display').innerText = r.timer.toString().padStart(2, '0');
-                }
+                if (r.status === '搶答中') document.getElementById('timer-display').innerText = r.timer;
+                if (r.status === '判定中' && r.queue[r.activeIdx]) document.getElementById('candidate-name').innerText = r.queue[r.activeIdx].name;
 
-                // 渲染評分對象
-                if (r.status === 'REVIEW' && r.queue[r.activeIdx]) {
-                    document.getElementById('candidate-name').innerText = r.queue[r.activeIdx].name;
-                }
-
-                // 渲染側邊欄：積分榜
-                const leaderboard = document.getElementById('leaderboard');
+                // 榜單優化：增加進度條效果
+                const maxScore = Math.max(...r.students.map(s => s.score), 1);
                 const sorted = [...r.students].sort((a,b) => b.score - a.score);
-                leaderboard.innerHTML = sorted.map((s, i) => `
-                    <div class="rank-transition flex justify-between items-center bg-slate-800/40 p-3 rounded-xl border border-white/5">
-                        <div class="flex items-center gap-3">
-                            <span class="w-5 h-5 flex items-center justify-center rounded bg-slate-700 text-[10px] font-black">${i+1}</span>
-                            <span class="font-bold text-sm">${s.name}</span>
+                document.getElementById('leaderboard').innerHTML = sorted.map((s, i) => `
+                    <div class="relative bg-white border border-stone-100 rounded-xl p-3 overflow-hidden">
+                        <div class="rank-bar absolute left-0 bottom-0 h-1 opacity-20" style="width: ${(s.score/maxScore)*100}%"></div>
+                        <div class="flex justify-between items-center relative z-10">
+                            <span class="text-xs font-bold ${i<3?'text-[#d97706]':'text-stone-400'}">第 ${i+1} 名</span>
+                            <span class="font-bold text-stone-800">${s.name}</span>
+                            <span class="text-[#2d5a27] font-black">${s.score} <small class="text-[10px]">分</small></span>
                         </div>
-                        <span class="text-emerald-400 font-black">${s.score} <small class="text-[8px] opacity-50">PTS</small></span>
                     </div>
-                `).join('') || '<p class="text-slate-600 text-xs text-center py-10">尚無參賽者數據</p>';
+                `).join('');
 
-                // 渲染側邊欄：搶答隊列
-                const queueBox = document.getElementById('buzz-queue');
-                queueBox.innerHTML = r.queue.map((q, i) => `
-                    <div class="flex items-center justify-between p-2 rounded-lg text-[10px] bg-slate-900/50 border ${i === r.activeIdx ? 'border-indigo-500' : 'border-transparent'}">
-                        <span class="text-slate-400 font-medium">#${i+1} ${q.name}</span>
-                        <span class="${q.state==='WRONG'?'text-rose-500':(q.state==='CORRECT'?'text-emerald-500':'text-slate-600')} font-black">${q.state}</span>
+                // 隊列優化：視覺化處理
+                document.getElementById('buzz-queue').innerHTML = r.queue.map((q, i) => `
+                    <div class="flex items-center gap-3 p-2 rounded-lg border ${i === r.activeIdx ? 'border-[#2d5a27] bg-[#2d5a27]/5 active-glow' : 'border-stone-100'}">
+                        <span class="w-5 h-5 flex items-center justify-center rounded-full bg-stone-100 text-[10px] font-bold">${i+1}</span>
+                        <span class="flex-1 text-sm font-medium text-stone-700">${q.name}</span>
+                        <span class="text-[10px] font-bold ${q.state==='正確'?'text-[#2d5a27]':(q.state==='錯誤'?'text-red-700':'text-stone-400')}">${q.state}</span>
                     </div>
-                `).join('') || '<p class="text-slate-700 text-[9px] text-center italic">等待按鈕信號...</p>';
+                `).join('') || '<p class="text-stone-300 text-center py-10 text-xs italic">尚未有人搶答</p>';
 
-                if (r.status === 'FINISHED') this.renderFinalPodium(sorted);
+                if (r.status === '已結束') this.renderFinalPodium(sorted);
             },
 
             renderStudentUI: function() {
                 const r = this.state.room;
                 const me = r.students.find(s => s.id === this.state.studentInfo.id);
-                if (me) {
-                    document.getElementById('my-score-display').innerText = me.score;
-                    this.state.studentInfo.score = me.score;
-                }
+                if(me) document.getElementById('my-score-display').innerText = me.score;
 
                 const btn = document.getElementById('main-buzzer');
                 const icon = document.getElementById('buzzer-icon');
                 const text = document.getElementById('buzzer-text');
                 const hint = document.getElementById('student-hint');
-
                 const inQueueIdx = r.queue.findIndex(q => q.id === this.state.studentInfo.id);
 
-                if (r.status === 'LOBBY') {
-                    btn.className = "w-72 h-72 rounded-full bg-slate-800 border-[16px] border-slate-700 flex flex-col items-center justify-center";
-                    icon.innerText = "⏳"; text.innerText = "等待指令";
-                    text.classList.replace('text-emerald-400', 'text-slate-500');
-                    hint.innerText = "老師正在準備下一題，請保持專注！";
-                } else if (r.status === 'BUZZING') {
+                if (r.status === '等待中') {
+                    btn.className = "w-64 h-64 rounded-full bg-stone-100 border-[12px] border-stone-200 flex flex-col items-center justify-center";
+                    icon.innerText = "⏳"; text.innerText = "靜候指令";
+                    hint.innerText = "下一題準備中，請稍待...";
+                } else if (r.status === '搶答中') {
                     if (inQueueIdx === -1) {
-                        btn.className = "w-72 h-72 rounded-full bg-emerald-600 border-[16px] border-emerald-400 buzzer-glow flex flex-col items-center justify-center active:bg-emerald-500";
-                        icon.innerText = "⚡"; text.innerText = "點擊搶答";
-                        text.classList.replace('text-slate-500', 'text-white');
-                        hint.innerText = "快！就是現在！按下去！";
+                        btn.className = "w-64 h-64 rounded-full bg-[#2d5a27] border-[12px] border-[#1e3f1a] shadow-xl flex flex-col items-center justify-center active:scale-95 transition-all";
+                        icon.innerText = "⚡"; text.innerText = "立即搶答"; text.classList.replace('text-stone-400', 'text-white');
+                        hint.innerText = "快！按下按鈕取得優先權！";
                     } else {
-                        btn.className = "w-72 h-72 rounded-full bg-slate-700 border-[16px] border-slate-600 flex flex-col items-center justify-center opacity-60";
-                        icon.innerText = "✅"; text.innerText = "已發送";
-                        hint.innerText = `你是隊列中第 ${inQueueIdx + 1} 位按下的！`;
+                        btn.className = "w-64 h-64 rounded-full bg-stone-50 border-[12px] border-stone-200 flex flex-col items-center justify-center opacity-50";
+                        icon.innerText = "✅"; text.innerText = "已送出"; text.classList.replace('text-white', 'text-stone-400');
+                        hint.innerText = `您排在第 ${inQueueIdx+1} 位`;
                     }
-                } else if (r.status === 'REVIEW') {
-                    const isMyTurn = (inQueueIdx === r.activeIdx && inQueueIdx !== -1);
-                    btn.className = isMyTurn ? 
-                        "w-72 h-72 rounded-full bg-indigo-600 border-[16px] border-indigo-400 buzzer-glow flex flex-col items-center justify-center" : 
-                        "w-72 h-72 rounded-full bg-slate-800 border-[16px] border-slate-700 flex flex-col items-center justify-center opacity-40";
-                    icon.innerText = isMyTurn ? "📢" : "🔇";
-                    text.innerText = isMyTurn ? "請回答" : "判定中";
-                    hint.innerText = isMyTurn ? "請直接向老師說明您的答案！" : "有人搶到了，密切注意結果...";
-                } else if (r.status === 'FINISHED') {
+                } else if (r.status === '判定中') {
+                    const myTurn = (inQueueIdx === r.activeIdx && inQueueIdx !== -1);
+                    btn.className = myTurn ? "w-64 h-64 rounded-full bg-[#d97706] border-[12px] border-[#b45309] shadow-xl flex flex-col items-center justify-center" : "w-64 h-64 rounded-full bg-stone-100 border-[12px] border-stone-200 flex flex-col items-center justify-center opacity-30";
+                    icon.innerText = myTurn ? "📢" : "🔇";
+                    text.innerText = myTurn ? "請回答" : "判定中";
+                    hint.innerText = myTurn ? "請向主持人說明您的答案！" : "有人搶先了，等待判定結果...";
+                } else if (r.status === '已結束') {
                     document.getElementById('view-student-dash').classList.add('hidden');
                     document.getElementById('view-result').classList.remove('hidden');
                     this.renderFinalPodium([...r.students].sort((a,b) => b.score - a.score));
@@ -623,40 +521,28 @@
             },
 
             renderFinalPodium: function(sorted) {
-                const box = document.getElementById('final-podium');
-                box.innerHTML = sorted.slice(0, 5).map((s, i) => `
-                    <div class="flex justify-between items-center bg-slate-900/60 p-5 rounded-2xl border border-white/5">
-                        <div class="flex items-center gap-4">
-                            <span class="text-2xl font-black ${i===0?'text-yellow-500':(i===1?'text-slate-300':'text-orange-500')}">${i+1}.</span>
-                            <span class="text-xl font-bold">${s.name}</span>
-                        </div>
-                        <span class="bg-indigo-600 text-white px-4 py-1 rounded-lg font-black">${s.score} 分</span>
+                document.getElementById('final-podium').innerHTML = sorted.slice(0, 5).map((s, i) => `
+                    <div class="flex justify-between items-center bg-white p-5 rounded-2xl border border-stone-200">
+                        <span class="text-2xl font-bold ${i===0?'text-[#d97706]':'text-stone-400'}">${i+1}. ${s.name}</span>
+                        <span class="bg-[#2d5a27] text-white px-4 py-1 rounded-lg font-bold">${s.score} 分</span>
                     </div>
-                `).join('') || '<p class="text-slate-500 text-center">無參賽者記錄</p>';
+                `).join('');
             },
 
-            // --- 工具 ---
             updateStatus: function(msg, colorKey) {
                 const dot = document.getElementById('status-dot');
                 const txt = document.getElementById('status-text');
                 dot.style.backgroundColor = this.config.colors[colorKey];
                 txt.innerText = msg;
-                txt.style.color = this.config.colors[colorKey];
             },
 
             genQRCode: function(url) {
                 const container = document.getElementById('qr-container');
                 container.innerHTML = "";
-                new QRCode(container, {
-                    text: url, width: 220, height: 220,
-                    colorDark : "#0f172a", colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
+                new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#1a202c", colorLight: "#ffffff" });
             },
 
-            toggleQR: function(show) {
-                document.getElementById('modal-qr').classList.toggle('hidden', !show);
-            },
+            toggleQR: function(show) { document.getElementById('modal-qr').classList.toggle('hidden', !show); },
 
             playSound: function(freq, dur) {
                 try {
@@ -667,7 +553,7 @@
                     osc.frequency.value = freq;
                     gain.gain.setValueAtTime(0, actx.currentTime);
                     gain.gain.linearRampToValueAtTime(0.1, actx.currentTime + 0.05);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+                    gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
                     osc.start(); osc.stop(actx.currentTime + dur);
                 } catch(e) {}
             }
