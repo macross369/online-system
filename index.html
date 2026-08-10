@@ -152,7 +152,7 @@
                 <p class="text-stone-400 italic">智慧交鋒，各顯神通。金榜題名如下：</p>
             </div>
             <div id="final-podium" class="space-y-8"></div>
-            <button onclick="location.reload()" class="px-12 py-5 rounded-2xl btn-action font-black text-lg">返回山門</button>
+            <button onclick="location.reload()" class="px-12 py-5 rounded-2xl btn-action font-black text-lg">返回大廳</button>
         </section>
     </main>
 
@@ -167,7 +167,16 @@
 
     <script>
         const app = {
-            config: { prefix: 'XYXZ-GZ-v3-' },
+            config: { 
+                prefix: 'XYXZ-GZ-v4-',
+                peerConfig: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' }
+                    ]
+                }
+            },
             state: { role: null, roomCode: null, peer: null, connections: {}, me: { id: '', name: '', score: 0 }, isPenalty: false,
                 room: { status: '等待中', currentQ: 1, totalQ: 5, limit: 10, timer: 0, students: [], queue: [], activeIdx: 0 }
             },
@@ -185,10 +194,14 @@
                 this.state.roomCode = c;
                 this.state.room.totalQ = parseInt(document.getElementById('inp-total-q').value) || 5;
                 this.state.room.limit = parseInt(document.getElementById('inp-limit').value) || 10;
-                this.state.peer = new Peer(this.config.prefix + c);
+                
+                this.state.peer = new Peer(this.config.prefix + c, { config: this.config.peerConfig });
                 this.state.peer.on('open', () => { this.updateStatus('大屏已開啟', '#27ae60'); this.showTeacherDash(); });
-                this.state.peer.on('connection', (conn) => conn.on('data', (d) => this.handleTeacherData(d, conn)));
-                this.state.peer.on('error', (err) => { alert('連線異常，請重新整理頁面。'); location.reload(); });
+                this.state.peer.on('connection', (conn) => {
+                    conn.on('data', (d) => this.handleTeacherData(d, conn));
+                    conn.on('error', () => delete this.state.connections[conn.peer]);
+                });
+                this.state.peer.on('error', (err) => { alert('連線異常：' + err.type); location.reload(); });
             },
             showTeacherDash: function() {
                 document.getElementById('view-teacher-setup').classList.add('hidden');
@@ -202,13 +215,16 @@
                 const r = this.state.room;
                 if (d.type === 'JOIN') {
                     const existing = r.students.findIndex(s => s.name === d.payload.name);
-                    if (existing !== -1) { r.students[existing].id = d.payload.id; } else { r.students.push({ ...d.payload, score: 0 }); }
+                    if (existing !== -1) { r.students[existing].id = d.payload.id; } 
+                    else { r.students.push({ ...d.payload, score: 0 }); }
                     this.state.connections[d.payload.id] = conn; this.broadcast(); this.playSound(440, 0.1);
                 }
                 if (d.type === 'BUZZ') {
                     if (r.status !== '搶答中' || r.queue.find(q => q.id === d.payload.id)) return;
                     r.queue.push({ ...d.payload, time: Date.now(), state: '待判定' });
-                    if (r.queue.length >= r.students.length) this.stopBuzzing(); else { this.broadcast(); this.playSound(660, 0.1); }
+                    // 智慧截斷：若全員皆已搶答，立即終止計時進入判定
+                    if (r.queue.length >= r.students.length) this.stopBuzzing(); 
+                    else { this.broadcast(); this.playSound(660, 0.1); }
                 }
             },
             broadcast: function() {
@@ -219,7 +235,11 @@
                 const r = this.state.room; if (!r.students.length) return alert('尚未有上賓入座。');
                 r.status = '搶答中'; r.queue = []; r.activeIdx = 0; r.timer = r.limit;
                 if (this.clock) clearInterval(this.clock);
-                this.clock = setInterval(() => { r.timer--; if (r.timer <= 0) this.stopBuzzing(); else this.broadcast(); }, 1000);
+                this.clock = setInterval(() => { 
+                    r.timer--; 
+                    if (r.timer <= 0) this.stopBuzzing(); 
+                    else this.broadcast(); 
+                }, 1000);
                 this.broadcast(); this.playSound(880, 0.2);
             },
             stopBuzzing: function() {
@@ -252,10 +272,11 @@
                 this.state.me.name = n;
                 document.getElementById('btn-student-join').innerText = '正在通報...';
                 document.getElementById('btn-student-join').disabled = true;
-                this.state.peer = new Peer();
+                
+                this.state.peer = new Peer({ config: this.config.peerConfig });
                 this.state.peer.on('open', (id) => {
                     this.state.me.id = id;
-                    const conn = this.state.peer.connect(this.config.prefix + c);
+                    const conn = this.state.peer.connect(this.config.prefix + c, { reliable: true });
                     conn.on('open', () => {
                         conn.send({ type: 'JOIN', payload: { id, name: n }});
                         document.getElementById('view-student-join').classList.add('hidden');
@@ -265,8 +286,9 @@
                         this.updateStatus('已入座', '#27ae60');
                     });
                     conn.on('data', (d) => { if (d.type === 'SYNC') { this.state.room = d.payload; this.renderStudentUI(); } });
+                    conn.on('close', () => { alert('連線已中斷，請刷新。'); location.reload(); });
                 });
-                this.state.peer.on('error', () => { alert('連線失敗，請檢查房間代碼。'); location.reload(); });
+                this.state.peer.on('error', () => { alert('連線失敗，請檢查代碼或網路環境。'); location.reload(); });
             },
             handleBuzzerClick: function() {
                 if (this.state.isPenalty) return;
