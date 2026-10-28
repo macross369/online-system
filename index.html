@@ -1,6 +1,6 @@
 <!-- Chosen Palette: Warm Bamboo & Scholar Ink (Paper #fdfcf8, Ink #2c3e50, Jade #27ae60, Gold #d4af37, Crimson #c0392b, Sky #0284c7) -->
-<!-- Application Structure Plan: Single-page application with dual tabs ("⚡ 線上搶答" and "⏱️ 計時測驗"). In Timer mode: Host dashboard includes an explicit "Start Test" button next to QR code, score disclosure toggle switch (Hide vs Live), synchronized 3-2-1 countdown overlay for both host and students, delayed score announcement trigger, and peer-synced end-of-game leaderboards via PeerJS WebRTC data channels. -->
-<!-- Visualization & Content Choices: Dynamic state counters, real-time sync leaderboards, oversized touch-friendly buttons, synchronized 3-2-1 countdown overlay, and dynamic QR Code generation via qrcode.js Canvas rendering. PeerJS WebRTC data channels provide real-time zero-backend dynamic interaction. All visuals use styled HTML elements and Tailwind classes without raster images. NO SVG graphics used. NO Mermaid JS used. -->
+<!-- Application Structure Plan: Single-page application with dual tabs ("⚡ 線上搶答" and "⏱️ 計時測驗"). In Timer mode: Host dashboard includes an explicit "Start Test" button next to QR code, score disclosure toggle switch (Hide vs Live), synchronized 3-2-1 countdown overlay for both host and students, delayed score announcement trigger, and peer-synced end-of-game leaderboards with highlighted "Personal Score" blue badge. In Quiz mode: Explicit Start Quiz button is restored under QR code on host dashboard. -->
+<!-- Visualization & Content Choices: Dynamic state counters, real-time sync leaderboards with personal identification badges, oversized touch-friendly buttons, synchronized 3-2-1 countdown overlay, and dynamic QR Code generation via qrcode.js Canvas rendering. PeerJS WebRTC data channels provide real-time zero-backend dynamic interaction. All visuals use styled HTML elements and Tailwind classes without raster images. NO SVG graphics used. NO Mermaid JS used. -->
 <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -201,10 +201,18 @@
                     </div>
 
                     <div class="bamboo-card rounded-2xl p-8 text-center space-y-6 flex flex-col items-center justify-center min-h-[340px]">
-                        <div id="teacher-qrcode-box" class="space-y-4">
+                        <!-- QR Code 面板區，增加恢復之「開始搶答」按鈕 -->
+                        <div id="teacher-qrcode-box" class="space-y-5 w-full max-w-md mx-auto">
                             <p class="text-sm font-bold text-stone-600">諸葛軍師提醒：請上賓掃描 QR Code 或輸入房間號碼入座</p>
-                            <div id="qrcode-container" class="p-4 bg-white rounded-xl shadow-inner inline-block border"></div>
+                            <div id="qrcode-container" class="p-4 bg-white rounded-xl shadow-inner inline-block border mx-auto"></div>
                             <p id="room-link-text" class="text-xs text-stone-400 select-all font-mono break-all"></p>
+                            
+                            <!-- 恢復開始搶答活動按鈕 -->
+                            <div class="pt-3 border-t border-stone-200">
+                                <button id="btn-host-start-quiz-init" onclick="hostStartBuzz()" class="w-full py-3.5 rounded-xl btn-jade font-bold text-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+                                    <span>⚡ 開始搶答</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div id="teacher-quiz-box" class="hidden space-y-6 w-full">
@@ -389,7 +397,7 @@
                             <div id="tm-qrcode-container" class="p-4 bg-white rounded-xl shadow-inner inline-block border mx-auto"></div>
                             <p id="tm-room-link-text" class="text-xs text-stone-400 select-all font-mono break-all"></p>
                             
-                            <!-- 新增：成績公開隱藏選項設定 -->
+                            <!-- 成績公開隱藏選項設定 -->
                             <div class="pt-2 border-t border-stone-200">
                                 <label class="inline-flex items-center gap-2 cursor-pointer text-sm font-bold text-stone-700">
                                     <input type="checkbox" id="tm-checkbox-hide-scores" checked class="w-4 h-4 text-sky-600 rounded focus:ring-sky-500 border-stone-300">
@@ -397,10 +405,10 @@
                                 </label>
                             </div>
 
-                            <!-- 新增：主持人開始測驗按鈕 -->
+                            <!-- 按鈕文字修改為：開始測驗 -->
                             <div>
                                 <button id="tm-btn-host-start" onclick="tmHostTriggerCountdown()" class="w-full py-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
-                                    <span>🚀 開始 3-2-1 測驗</span>
+                                    <span>🚀 開始測驗</span>
                                 </button>
                             </div>
                         </div>
@@ -490,7 +498,7 @@
                     <div id="tm-champion-detail" class="text-lg font-bold text-stone-300">紀錄秒數：-- 秒 (誤差: -- 秒)</div>
                 </div>
 
-                <!-- 全員感知識別排行榜 -->
+                <!-- 全員感知識別排行榜 (含個人成績藍色標籤) -->
                 <div class="space-y-3 text-left">
                     <h3 class="font-bold text-stone-700 text-sm">📊 時間感知精準榜</h3>
                     <div id="tm-final-leaderboard-list" class="space-y-2 max-h-[220px] overflow-y-auto pr-1"></div>
@@ -973,14 +981,16 @@
                     currentRank = idx + 1;
                 }
                 const isChampion = (currentRank === 1);
+                const isMe = (st.name === myName && myName !== "");
                 return `
-                    <div class="p-3 rounded-xl border ${isChampion ? 'bg-amber-50 border-amber-300 font-bold' : 'bg-stone-50 border-stone-200'} flex items-center justify-between">
-                        <div class="flex items-center gap-3">
+                    <div class="p-3 rounded-xl border ${isChampion ? 'bg-amber-50 border-amber-300 font-bold' : (isMe ? 'bg-sky-50 border-sky-300 font-bold' : 'bg-stone-50 border-stone-200')} flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <span class="w-6 h-6 rounded-full ${isChampion ? 'bg-amber-500 text-white font-black' : 'bg-stone-200 text-stone-600 font-bold'} flex items-center justify-center text-xs">
                                 ${currentRank}
                             </span>
                             <span class="text-stone-800">${st.name}</span>
                             ${isChampion ? '<span class="text-xs px-2 py-0.5 rounded bg-amber-200 text-amber-900 font-bold">冠軍</span>' : ''}
+                            ${isMe ? '<span class="text-xs px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-bold border border-sky-300">個人成績</span>' : ''}
                         </div>
                         <span class="font-black text-amber-600">${st.score} 分</span>
                     </div>
@@ -1085,7 +1095,7 @@
         }
 
         // =========================================================================
-        // 標籤頁 2 邏輯：計時測驗系統 (升級同步倒數與成績發布功能)
+        // 標籤頁 2 邏輯：計時測驗系統 (升級個人成績標籤與按鈕顯示)
         // =========================================================================
         function switchTimerView(viewId) {
             ['tm-view-landing', 'tm-view-teacher-setup', 'tm-view-teacher-dash', 'tm-view-student-join', 'tm-view-student-dash', 'tm-view-result'].forEach(id => {
@@ -1395,17 +1405,19 @@
 
             listContainer.innerHTML = sortedAll.map(st => {
                 const isChampion = (st.rank === 1);
+                const isMe = (st.name === tmMyName && tmMyName !== "");
                 const isOver = st.recordSec > tmTargetSec;
                 const diffSign = (st.diff === 0) ? "🎯 精準" : (isOver ? `+${st.diff.toFixed(2)}s` : `-${st.diff.toFixed(2)}s`);
 
                 return `
-                    <div class="p-3 rounded-xl border ${isChampion ? 'bg-amber-50 border-amber-300 font-bold' : 'bg-stone-50 border-stone-200'} flex items-center justify-between">
-                        <div class="flex items-center gap-3">
+                    <div class="p-3 rounded-xl border ${isChampion ? 'bg-amber-50 border-amber-300 font-bold' : (isMe ? 'bg-sky-50 border-sky-300 font-bold' : 'bg-stone-50 border-stone-200')} flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <span class="w-6 h-6 rounded-full ${isChampion ? 'bg-amber-500 text-white font-black' : 'bg-stone-200 text-stone-600 font-bold'} flex items-center justify-center text-xs">
                                 ${st.rank || '-'}
                             </span>
                             <span class="text-stone-800">${st.name}</span>
                             ${isChampion ? '<span class="text-xs px-2 py-0.5 rounded bg-amber-200 text-amber-900 font-bold">冠軍</span>' : ''}
+                            ${isMe ? '<span class="text-xs px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-bold border border-sky-300">個人成績</span>' : ''}
                         </div>
                         <div class="text-right">
                             <span class="font-mono font-black text-sky-700 block">${st.recordSec ? st.recordSec.toFixed(2) + ' 秒' : '未按下'}</span>
@@ -1456,7 +1468,7 @@
                 });
             });
 
-            peer.on('error', (err) => {
+            tmPeer.on('error', (err) => {
                 console.error("Timer Student Join Error:", err);
                 if (joinBtn) joinBtn.disabled = false;
                 if (err.type === 'peer-unavailable') {
