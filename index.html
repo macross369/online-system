@@ -1,13 +1,13 @@
 <!-- Chosen Palette: Warm Bamboo & Scholar Ink (Paper #fdfcf8, Ink #2c3e50, Jade #27ae60, Gold #d4af37, Crimson #c0392b, Sky #0284c7) -->
-<!-- Application Structure Plan: Single-page application with dual tabs ("⚡ 線上搶答" and "⏱️ 計時測驗"). In Timer mode: Host dashboard includes an explicit "Start Test" button next to QR code, score disclosure toggle switch (Hide vs Live), synchronized 3-2-1 countdown overlay for both host and students, delayed score announcement trigger, and peer-synced end-of-game leaderboards with highlighted "Personal Score" blue badge. In Quiz mode: Explicit Start Quiz button is restored under QR code on host dashboard. -->
-<!-- Visualization & Content Choices: Dynamic state counters, real-time sync leaderboards with personal identification badges, oversized touch-friendly buttons, synchronized 3-2-1 countdown overlay, and dynamic QR Code generation via qrcode.js Canvas rendering. PeerJS WebRTC data channels provide real-time zero-backend dynamic interaction. All visuals use styled HTML elements and Tailwind classes without raster images. NO SVG graphics used. NO Mermaid JS used. -->
+<!-- Application Structure Plan: Single-page application with dual tabs ("⚡ 線上搶答" and "⏱️ 計時測驗"). Features end-of-game "再比一次" (Play Again) button for instant match restart without losing PeerJS connections, simplified 3-2-1 countdown overlay without extra prefix titles, host dashboard with live QR codes, and score reveal toggles. Header logo updated to custom logo image with updated brand name "清閒小築". -->
+<!-- Visualization & Content Choices: Dynamic state counters, real-time sync leaderboards with personal identification badges, oversized touch-friendly buttons, synchronized 3-2-1 countdown overlay, dynamic QR Code generation via qrcode.js Canvas rendering, and custom logo image rendering. PeerJS WebRTC data channels provide real-time zero-backend dynamic interaction. All visuals use styled HTML elements and Tailwind classes without raster graphics except for the specified user logo. NO SVG graphics used. NO Mermaid JS used. -->
 <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏯 閒雲小築線上工具 | 諸葛軍師與智慧感測系統</title>
+    <title>清閒小築線上工具 | 諸葛軍師與智慧感測系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -102,7 +102,7 @@
 
     <!-- 全域倒數計時覆蓋視窗 (3-2-1 倒數) -->
     <div id="countdown-modal" class="fixed inset-0 bg-stone-900/90 backdrop-blur-md z-[100] flex flex-col items-center justify-center text-white hidden">
-        <div class="text-stone-300 text-xl font-bold mb-4 tracking-widest">諸葛軍師提示：準備測驗</div>
+        <div class="text-stone-300 text-2xl font-bold mb-4 tracking-widest">準備測驗</div>
         <div id="countdown-num-display" class="text-9xl font-black text-amber-400 font-mono tracking-tighter animate-count-pop">3</div>
     </div>
 
@@ -110,8 +110,9 @@
     <header class="w-full bg-white/80 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="confirmReturnHome()">
-                <span class="text-2xl">🏯</span>
-                <span class="text-xl font-black tracking-wider text-stone-800">閒雲小築線上工具</span>
+                <!-- 更新後的 Logo 圖示 (大小與原文字/圖示比例一致) -->
+                <img src="logo.png" alt="清閒小築 Logo" class="w-8 h-8 rounded-full object-cover border border-stone-200 shadow-sm">
+                <span class="text-xl font-black tracking-wider text-stone-800">清閒小築線上工具</span>
             </div>
 
             <!-- 主切換標籤頁 -->
@@ -201,13 +202,12 @@
                     </div>
 
                     <div class="bamboo-card rounded-2xl p-8 text-center space-y-6 flex flex-col items-center justify-center min-h-[340px]">
-                        <!-- QR Code 面板區，增加恢復之「開始搶答」按鈕 -->
+                        <!-- QR Code 面板區 -->
                         <div id="teacher-qrcode-box" class="space-y-5 w-full max-w-md mx-auto">
                             <p class="text-sm font-bold text-stone-600">諸葛軍師提醒：請上賓掃描 QR Code 或輸入房間號碼入座</p>
                             <div id="qrcode-container" class="p-4 bg-white rounded-xl shadow-inner inline-block border mx-auto"></div>
                             <p id="room-link-text" class="text-xs text-stone-400 select-all font-mono break-all"></p>
                             
-                            <!-- 恢復開始搶答活動按鈕 -->
                             <div class="pt-3 border-t border-stone-200">
                                 <button id="btn-host-start-quiz-init" onclick="hostStartBuzz()" class="w-full py-3.5 rounded-xl btn-jade font-bold text-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
                                     <span>⚡ 開始搶答</span>
@@ -313,7 +313,10 @@
                     <div id="final-leaderboard-list" class="space-y-2 max-h-[220px] overflow-y-auto pr-1"></div>
                 </div>
 
-                <button onclick="confirmReturnHome()" class="w-full py-3.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-lg shadow-lg">返回大廳</button>
+                <div class="space-y-3 pt-2">
+                    <button onclick="quizRestartGame()" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg shadow-lg transition">🔄 再比一次</button>
+                    <button onclick="confirmReturnHome()" class="w-full py-3.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-lg shadow-lg">返回大廳</button>
+                </div>
             </section>
         </div>
 
@@ -405,7 +408,6 @@
                                 </label>
                             </div>
 
-                            <!-- 按鈕文字修改為：開始測驗 -->
                             <div>
                                 <button id="tm-btn-host-start" onclick="tmHostTriggerCountdown()" class="w-full py-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
                                     <span>🚀 開始測驗</span>
@@ -504,7 +506,11 @@
                     <div id="tm-final-leaderboard-list" class="space-y-2 max-h-[220px] overflow-y-auto pr-1"></div>
                 </div>
 
-                <button onclick="confirmReturnHome()" class="w-full py-3.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-lg shadow-lg">返回大廳</button>
+                <!-- 按鈕區：包含「再比一次」與「返回大廳」 -->
+                <div class="space-y-3 pt-2">
+                    <button onclick="tmRestartGame()" class="w-full py-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-lg shadow-lg transition">🔄 再比一次</button>
+                    <button onclick="confirmReturnHome()" class="w-full py-3.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-lg shadow-lg">返回大廳</button>
+                </div>
             </section>
         </div>
 
@@ -512,12 +518,12 @@
 
     <!-- 底端宣示條 -->
     <footer class="w-full py-3 text-center text-xs text-stone-400 border-t border-stone-200 bg-white/50">
-        閒雲小築線上工具 &copy; 2026 | 諸葛軍師與智慧感測系統
+        清閒小築線上工具 &copy; 2026 | 諸葛軍師與智慧感測系統
     </footer>
 
     <!-- JavaScript 核心邏輯 -->
     <script>
-        // 增強型 WebRTC 配置：加入多重公共 STUN 伺服器，提高跨網路穿越成功率
+        // 增強型 WebRTC 配置：加入多重公共 STUN 伺服器
         const PEER_CONFIG = {
             debug: 1,
             config: {
@@ -567,8 +573,8 @@
         let tmRoomId = "";
 
         let tmTargetSec = 20;
-        let tmState = 'WAITING'; // WAITING, COUNTDOWN, RUNNING, FINISHED_WAITING_REVEAL, FINISHED
-        let tmHideScores = true; // 是否隱藏參與者成績
+        let tmState = 'WAITING';
+        let tmHideScores = true;
         let tmCountdownVal = 3;
         let tmCountdownTimer = null;
         let tmStartTime = 0;
@@ -634,7 +640,7 @@
             modal.classList.remove('hidden');
             display.innerText = numStr;
             display.classList.remove('animate-count-pop');
-            void display.offsetWidth; // 強制重繪以重置 CSS 動畫
+            void display.offsetWidth;
             display.classList.add('animate-count-pop');
         }
 
@@ -642,7 +648,6 @@
             document.getElementById('countdown-modal').classList.add('hidden');
         }
 
-        // Safely destroy existing peer connection
         function destroyPeer(instance) {
             if (instance) {
                 try {
@@ -998,6 +1003,22 @@
             }).join('');
         }
 
+        function quizRestartGame() {
+            if (role === 'teacher') {
+                currentQuestion = 1;
+                quizState = 'WAITING';
+                buzzQueue = [];
+                students.forEach(s => s.score = 0);
+                document.getElementById('teacher-quiz-box').classList.add('hidden');
+                document.getElementById('teacher-qrcode-box').classList.remove('hidden');
+                switchQuizView('view-teacher-dash');
+                broadcastStateToStudents();
+                updateTeacherDashUI();
+            } else {
+                switchQuizView('view-student-dash');
+            }
+        }
+
         function joinStudentRoom() {
             myName = document.getElementById('input-student-name').value.trim();
             const inputCode = document.getElementById('input-room-id').value.trim().toUpperCase();
@@ -1065,7 +1086,9 @@
                     buzzBtn.disabled = true;
                     statusHint.innerText = `第 ${data.currentQuestion} / ${data.totalQuestions} 題：等待築主開啟搶答...`;
                     statusHint.className = "text-sm font-bold text-stone-500";
+                    switchQuizView('view-student-dash');
                 } else if (data.quizState === 'BUZZING') {
+                    switchQuizView('view-student-dash');
                     const hasBuzzed = data.buzzQueue.includes(peer.id);
                     if (hasBuzzed) {
                         buzzBtn.disabled = true;
@@ -1095,7 +1118,7 @@
         }
 
         // =========================================================================
-        // 標籤頁 2 邏輯：計時測驗系統 (升級個人成績標籤與按鈕顯示)
+        // 標籤頁 2 邏輯：計時測驗系統
         // =========================================================================
         function switchTimerView(viewId) {
             ['tm-view-landing', 'tm-view-teacher-setup', 'tm-view-teacher-dash', 'tm-view-student-join', 'tm-view-student-dash', 'tm-view-result'].forEach(id => {
@@ -1251,7 +1274,6 @@
             }
         }
 
-        // 主持人點擊啟動 3-2-1 倒數
         function tmHostTriggerCountdown() {
             if (tmStudents.length === 0) {
                 if (!confirm("目前尚無上賓連線，確定要單人進行測驗嗎？")) {
@@ -1259,7 +1281,6 @@
                 }
             }
 
-            // 讀取隱藏成績選項設定
             tmHideScores = document.getElementById('tm-checkbox-hide-scores').checked;
 
             document.getElementById('tm-teacher-qrcode-box').classList.add('hidden');
@@ -1289,7 +1310,6 @@
             }, 1000);
         }
 
-        // 倒數結束後，正式進入測驗
         function tmHostStartTest() {
             tmState = 'RUNNING';
             tmStartTime = Date.now();
@@ -1305,7 +1325,6 @@
             broadcastTmStateToStudents();
             updateTmTeacherDashUI();
 
-            // 超時 10 秒後自動啟動公布檢查機制
             const timeoutMs = (tmTargetSec + 10) * 1000;
             clearTimeout(tmTimeoutCheck);
             tmTimeoutCheck = setTimeout(() => {
@@ -1315,11 +1334,9 @@
             }, timeoutMs);
         }
 
-        // 檢查是否完成全體測驗或顯示「公布成績」按鈕
         function checkTimerCompletionOrShowButton() {
             clearTimeout(tmTimeoutCheck);
             
-            // 計算與結算成績數值
             const submittedStudents = tmStudents.filter(s => s.recordSec !== null);
             submittedStudents.sort((a, b) => a.diff - b.diff);
 
@@ -1338,7 +1355,6 @@
             });
 
             if (tmHideScores) {
-                // 若設定隱藏成績，進入等待主持人按鈕公布狀態
                 tmState = 'FINISHED_WAITING_REVEAL';
                 document.getElementById('tm-display-timer-status').innerText = "測驗已結束";
                 document.getElementById('tm-display-timer-status').className = "text-5xl font-black text-amber-600 font-mono";
@@ -1346,12 +1362,10 @@
                 broadcastTmStateToStudents();
                 updateTmTeacherDashUI();
             } else {
-                // 若未隱藏成績，直接發布結算
                 tmHostRevealResults();
             }
         }
 
-        // 主持人點擊公布成績
         function tmHostRevealResults() {
             tmState = 'FINISHED';
             broadcastTmStateToStudents();
@@ -1393,8 +1407,8 @@
                 const champRecord = champions[0].recordSec.toFixed(2);
                 const champDiff = champions[0].diff.toFixed(2);
 
-                document.getElementById('tm-champion-names').innerText = champNames;
-                document.getElementById('tm-champion-detail').innerText = `紀錄秒數：${champRecord} 秒 (誤差: ${champDiff} 秒)`;
+                document.getElementById('champion-names').innerText = champNames;
+                document.getElementById('champion-detail').innerText = `紀錄秒數：${champRecord} 秒 (誤差: ${champDiff} 秒)`;
             } else {
                 document.getElementById('tm-champion-names').innerText = "無人完成按鈕";
                 document.getElementById('tm-champion-detail').innerText = "";
@@ -1426,6 +1440,25 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function tmRestartGame() {
+            if (tmRole === 'teacher') {
+                tmState = 'WAITING';
+                tmStudents.forEach(s => {
+                    s.recordSec = null;
+                    s.diff = null;
+                    s.rank = null;
+                });
+                document.getElementById('tm-teacher-quiz-box').classList.add('hidden');
+                document.getElementById('tm-teacher-qrcode-box').classList.remove('hidden');
+                document.getElementById('tm-publish-btn-container').classList.add('hidden');
+                switchTimerView('tm-view-teacher-dash');
+                broadcastTmStateToStudents();
+                updateTmTeacherDashUI();
+            } else {
+                switchTimerView('tm-view-student-dash');
+            }
         }
 
         function tmJoinStudentRoom() {
@@ -1496,7 +1529,9 @@
                     statusHint.innerText = "等待築主啟動測驗...";
                     statusHint.className = "text-sm font-bold text-stone-500";
                     document.getElementById('tm-student-record-display').innerText = "-- 秒";
+                    switchTimerView('tm-view-student-dash');
                 } else if (data.tmState === 'COUNTDOWN') {
+                    switchTimerView('tm-view-student-dash');
                     tmBtn.disabled = true;
                     if (data.tmCountdownVal > 0) {
                         showCountdownModal(data.tmCountdownVal);
@@ -1507,6 +1542,7 @@
                     statusHint.className = "text-sm font-bold text-amber-600 animate-pulse";
                 } else if (data.tmState === 'RUNNING') {
                     hideCountdownModal();
+                    switchTimerView('tm-view-student-dash');
                     const myInfo = data.tmStudents.find(s => s.name === tmMyName);
                     if (myInfo && myInfo.recordSec !== null) {
                         tmBtn.disabled = true;
