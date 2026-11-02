@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Zen+Maru+Gothic:wght@400;500;700;900&family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap');
         :root {
             --paper: #fdfcf8;
             --ink: #2c3e50;
@@ -26,6 +26,10 @@
             color: var(--ink);
             user-select: none;
             overscroll-behavior: none;
+        }
+        /* 抽籤系統全域圓體設定 */
+        #app-tab-lottery, #app-tab-lottery * {
+            font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Microsoft JhengHei', sans-serif !important;
         }
         .bamboo-card {
             background: rgba(255, 255, 255, 0.96);
@@ -119,6 +123,7 @@
             <div class="flex items-center bg-stone-100 p-1 rounded-xl border border-stone-200 text-sm font-bold">
                 <button id="tab-btn-quiz" onclick="switchAppTab('quiz')" class="px-4 py-1.5 rounded-lg text-emerald-800 bg-white shadow-sm transition">⚡ 線上搶答</button>
                 <button id="tab-btn-timer" onclick="switchAppTab('timer')" class="px-4 py-1.5 rounded-lg text-stone-500 hover:text-stone-800 transition">⏱️ 計時測驗</button>
+                <button id="tab-btn-lottery" onclick="switchAppTab('lottery')" class="px-4 py-1.5 rounded-lg text-stone-500 hover:text-stone-800 transition">🎁 抽籤系統</button>
             </div>
 
             <!-- 連線狀態 -->
@@ -514,6 +519,140 @@
             </section>
         </div>
 
+        <!-- ========================================== -->
+        <!-- 標籤頁 3：可愛隨機抽籤趣                      -->
+        <!-- ========================================== -->
+        <div id="app-tab-lottery" class="w-full max-w-5xl flex flex-col items-center space-y-6 hidden py-4">
+            <!-- 標題裝飾氣泡 -->
+            <div class="text-center space-y-2">
+                <div class="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white shadow-md border border-amber-200/60">
+                    <span class="text-2xl font-black text-rose-500 flex items-center gap-1.5">
+                        <span>🎁</span> 可愛隨機抽籤趣 <span>🌟✨</span>
+                    </span>
+                </div>
+                <p class="text-xs sm:text-sm font-bold text-stone-600 flex items-center justify-center gap-1">
+                    老師的點名好幫手、活動的幸運星！ <span>🌟</span>
+                </p>
+            </div>
+
+            <!-- 抽籤主舞台網格 -->
+            <div class="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                <!-- 左側：抽籤設定卡片 -->
+                <div class="md:col-span-5 bg-white/95 rounded-3xl p-6 shadow-sm border border-stone-200/80 space-y-5">
+                    <div class="flex items-center gap-2 text-rose-500 font-black text-lg">
+                        <span class="text-xl">⚙️</span>
+                        <span>抽籤設定</span>
+                    </div>
+
+                    <!-- 座號範圍 -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-stone-600">⇣⇡ 座號範圍</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="flex items-center bg-stone-50 border border-stone-200 rounded-xl px-3 py-2">
+                                <span class="text-xs text-stone-400 font-bold mr-2">開始</span>
+                                <input type="number" id="lottery-start-num" value="1" min="1" class="w-full bg-transparent font-bold text-stone-800 outline-none text-center" onchange="resetLotteryPool()">
+                            </div>
+                            <div class="flex items-center bg-stone-50 border border-stone-200 rounded-xl px-3 py-2">
+                                <span class="text-xs text-stone-400 font-bold mr-2">結束</span>
+                                <input type="number" id="lottery-end-num" value="6" min="1" class="w-full bg-transparent font-bold text-stone-800 outline-none text-center" onchange="resetLotteryPool()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 例外號碼（缺號／未到排除） -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-bold text-stone-600">🚫 例外號碼 (缺號／未到)</label>
+                            <span class="text-[11px] text-stone-400">以逗號或空格分隔</span>
+                        </div>
+                        <div class="flex items-center bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-rose-400 transition">
+                            <input type="text" id="lottery-exclude-nums" placeholder="例如：3, 5 (排除不抽)" class="w-full bg-transparent font-bold text-stone-800 outline-none text-sm placeholder:font-normal placeholder:text-stone-300" oninput="resetLotteryPool()">
+                        </div>
+                    </div>
+
+                    <!-- 每次抽出數量 -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-stone-600">👤+ 每次抽出數量</label>
+                        <div class="flex items-center justify-between bg-stone-50 border border-stone-200 rounded-xl p-1.5">
+                            <button onclick="changeLotteryCount(-1)" class="w-10 h-10 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 font-black text-xl flex items-center justify-center transition active:scale-95">－</button>
+                            <input type="number" id="lottery-draw-count" value="1" min="1" readonly class="w-20 bg-transparent text-center font-black text-xl text-stone-800 outline-none">
+                            <button onclick="changeLotteryCount(1)" class="w-10 h-10 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 font-black text-xl flex items-center justify-center transition active:scale-95">＋</button>
+                        </div>
+                    </div>
+
+                    <!-- 防重複抽籤開關 -->
+                    <div class="p-4 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-stone-700 flex items-center gap-1.5">
+                                <span>🛡️</span> 防重複抽籤 (不重複)
+                            </span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="lottery-no-repeat" checked onchange="toggleNoRepeat()" class="sr-only peer">
+                                <div class="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs pt-1 border-t border-rose-100/60">
+                            <span class="text-rose-700 font-bold">
+                                剩餘可抽號碼：<span id="lottery-pool-count" class="font-black">6</span> 個
+                            </span>
+                            <button onclick="resetLotteryPool()" class="px-2.5 py-1 rounded-lg bg-white hover:bg-rose-100/60 text-stone-600 border border-stone-200 text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                                <span>🔄 重置號碼池</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 開始抽籤按鈕 -->
+                    <button id="btn-do-lottery" onclick="executeLotteryDraw()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xl shadow-lg shadow-rose-500/25 transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <span>🪄 開始抽籤！</span>
+                    </button>
+                </div>
+
+                <!-- 右側：幸運得主與歷史紀錄 -->
+                <div class="md:col-span-7 space-y-6">
+                    <!-- 幸運得主卡片 -->
+                    <div class="bg-white/95 rounded-3xl p-6 shadow-sm border border-emerald-100 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-emerald-600 font-black text-lg">
+                                <span class="text-xl">🎉</span>
+                                <span>幸運得主</span>
+                            </div>
+                            <span id="lottery-status-pill" class="text-xs px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                                點擊開始抽籤！
+                            </span>
+                        </div>
+
+                        <!-- 得主卡片展示舞台 -->
+                        <div id="lottery-stage" class="min-h-[240px] flex flex-wrap items-center justify-center gap-4 py-4">
+                            <!-- 預設展示單張卡片樣式 -->
+                            <div class="w-44 h-60 rounded-3xl bg-pink-100/80 border-2 border-pink-200 shadow-sm flex flex-col items-center justify-between p-4 transition-transform hover:scale-105">
+                                <span class="text-xs font-black tracking-widest text-pink-400">LUCKY</span>
+                                <div id="lottery-main-number" class="text-7xl font-black text-rose-500 font-mono tracking-tighter">?</div>
+                                <span class="text-sm font-bold text-rose-400">號</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 中籤歷史紀錄 -->
+                    <div class="bg-white/95 rounded-3xl p-5 shadow-sm border border-stone-200/80 space-y-3">
+                        <div class="flex items-center justify-between border-b pb-2">
+                            <div class="flex items-center gap-2 text-stone-700 font-bold text-sm">
+                                <span>📜</span>
+                                <span>中籤歷史紀錄</span>
+                            </div>
+                            <button onclick="clearLotteryHistory()" class="text-xs text-stone-400 hover:text-rose-500 font-bold transition flex items-center gap-1">
+                                <span>🗑️ 清除歷史</span>
+                            </button>
+                        </div>
+
+                        <div id="lottery-history-list" class="min-h-[80px] max-h-[180px] overflow-y-auto grid grid-cols-2 gap-2 text-xs p-1">
+                            <p class="col-span-2 text-xs text-stone-400 py-4 text-center">暫無紀錄</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- 底端宣示條 -->
@@ -583,11 +722,20 @@
         let tmMyName = "";
         let tmHostConnection = null;
 
+        // ----------------------------------------
+        // 標籤頁 3：抽籤系統變數
+        // ----------------------------------------
+        let lotteryPool = [];
+        let lotteryHistory = [];
+        let isLotteryRolling = false;
+
         // 頁面載入處理與網址參數
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const tabParam = urlParams.get('tab');
             const roomParam = urlParams.get('room');
+
+            resetLotteryPool();
 
             if (tabParam === 'timer') {
                 switchAppTab('timer');
@@ -595,6 +743,8 @@
                     document.getElementById('tm-input-room-id').value = roomParam;
                     switchTimerView('tm-view-student-join');
                 }
+            } else if (tabParam === 'lottery') {
+                switchAppTab('lottery');
             } else {
                 if (roomParam) {
                     document.getElementById('input-room-id').value = roomParam;
@@ -607,20 +757,221 @@
             currentTab = tabName;
             const quizBtn = document.getElementById('tab-btn-quiz');
             const timerBtn = document.getElementById('tab-btn-timer');
+            const lotteryBtn = document.getElementById('tab-btn-lottery');
             const quizBox = document.getElementById('app-tab-quiz');
             const timerBox = document.getElementById('app-tab-timer');
+            const lotteryBox = document.getElementById('app-tab-lottery');
+
+            // 復歸所有按鈕樣式
+            [quizBtn, timerBtn, lotteryBtn].forEach(b => {
+                b.className = "px-4 py-1.5 rounded-lg text-stone-500 hover:text-stone-800 transition";
+            });
+            quizBox.classList.add('hidden');
+            timerBox.classList.add('hidden');
+            lotteryBox.classList.add('hidden');
 
             if (tabName === 'quiz') {
                 quizBtn.className = "px-4 py-1.5 rounded-lg text-emerald-800 bg-white shadow-sm transition";
-                timerBtn.className = "px-4 py-1.5 rounded-lg text-stone-500 hover:text-stone-800 transition";
                 quizBox.classList.remove('hidden');
-                timerBox.classList.add('hidden');
-            } else {
+            } else if (tabName === 'timer') {
                 timerBtn.className = "px-4 py-1.5 rounded-lg text-sky-800 bg-white shadow-sm transition";
-                quizBtn.className = "px-4 py-1.5 rounded-lg text-stone-500 hover:text-stone-800 transition";
                 timerBox.classList.remove('hidden');
-                quizBox.classList.add('hidden');
+            } else if (tabName === 'lottery') {
+                lotteryBtn.className = "px-4 py-1.5 rounded-lg text-rose-600 bg-white shadow-sm transition";
+                lotteryBox.classList.remove('hidden');
             }
+        }
+
+        // =========================================================================
+        // 標籤頁 3 邏輯：抽籤系統
+        // =========================================================================
+        function getLotteryExcludedSet() {
+            const excludeInput = document.getElementById('lottery-exclude-nums')?.value || '';
+            return new Set(
+                excludeInput.split(/[,，\s]+/)
+                    .map(s => parseInt(s.trim()))
+                    .filter(n => !isNaN(n))
+            );
+        }
+
+        function resetLotteryPool() {
+            const start = parseInt(document.getElementById('lottery-start-num').value) || 1;
+            const end = parseInt(document.getElementById('lottery-end-num').value) || 6;
+            
+            if (start > end) {
+                document.getElementById('lottery-end-num').value = start;
+            }
+
+            const actualStart = Math.min(start, end);
+            const actualEnd = Math.max(start, end);
+            const excludeSet = getLotteryExcludedSet();
+
+            lotteryPool = [];
+            for (let i = actualStart; i <= actualEnd; i++) {
+                if (!excludeSet.has(i)) {
+                    lotteryPool.push(i);
+                }
+            }
+            updateLotteryPoolCount();
+        }
+
+        function updateLotteryPoolCount() {
+            const poolCountEl = document.getElementById('lottery-pool-count');
+            if (poolCountEl) {
+                poolCountEl.innerText = lotteryPool.length;
+            }
+        }
+
+        function changeLotteryCount(delta) {
+            const countInput = document.getElementById('lottery-draw-count');
+            let cur = parseInt(countInput.value) || 1;
+            cur = Math.max(1, cur + delta);
+            countInput.value = cur;
+        }
+
+        function toggleNoRepeat() {
+            const noRepeat = document.getElementById('lottery-no-repeat').checked;
+            if (!noRepeat) {
+                resetLotteryPool();
+            }
+        }
+
+        function executeLotteryDraw() {
+            if (isLotteryRolling) return;
+
+            const start = parseInt(document.getElementById('lottery-start-num').value) || 1;
+            const end = parseInt(document.getElementById('lottery-end-num').value) || 6;
+            const drawCount = parseInt(document.getElementById('lottery-draw-count').value) || 1;
+            const noRepeat = document.getElementById('lottery-no-repeat').checked;
+            const excludeSet = getLotteryExcludedSet();
+
+            const actualStart = Math.min(start, end);
+            const actualEnd = Math.max(start, end);
+            const validCandidates = [];
+            for (let i = actualStart; i <= actualEnd; i++) {
+                if (!excludeSet.has(i)) validCandidates.push(i);
+            }
+
+            if (validCandidates.length === 0) {
+                alert("座號範圍內所有號碼均已被設為例外排除，請調整座號或例外號碼！");
+                return;
+            }
+
+            if (noRepeat && lotteryPool.length < drawCount) {
+                alert(`剩餘號碼不足！目前僅剩餘 ${lotteryPool.length} 個號碼可供抽取，請重置號碼池或降低抽出數量。`);
+                return;
+            }
+
+            isLotteryRolling = true;
+            const btn = document.getElementById('btn-do-lottery');
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            const stage = document.getElementById('lottery-stage');
+            const statusPill = document.getElementById('lottery-status-pill');
+            statusPill.innerText = "正在轉動幸運籤號...";
+            statusPill.className = "text-xs px-3 py-1 rounded-full bg-amber-50 text-amber-700 font-bold border border-amber-200 animate-pulse";
+
+            // 準備卡片容器
+            stage.innerHTML = Array.from({ length: drawCount }).map((_, i) => `
+                <div id="lottery-card-${i}" class="w-40 sm:w-44 h-56 sm:h-60 rounded-3xl bg-pink-100/90 border-2 border-pink-200 shadow-sm flex flex-col items-center justify-between p-4 transform transition-all duration-300">
+                    <span class="text-xs font-black tracking-widest text-pink-400">LUCKY</span>
+                    <div class="roll-number text-6xl sm:text-7xl font-black text-rose-500 font-mono tracking-tighter">?</div>
+                    <span class="text-sm font-bold text-rose-400">號</span>
+                </div>
+            `).join('');
+
+            let rollTimes = 0;
+            const maxRolls = 20;
+            const rollInterval = setInterval(() => {
+                rollTimes++;
+                const rollElements = stage.querySelectorAll('.roll-number');
+                rollElements.forEach(el => {
+                    const randPick = validCandidates[Math.floor(Math.random() * validCandidates.length)];
+                    el.innerText = randPick;
+                });
+
+                if (rollTimes >= maxRolls) {
+                    clearInterval(rollInterval);
+                    finalizeLotteryDraw(drawCount, noRepeat, validCandidates);
+                }
+            }, 70);
+        }
+
+        function finalizeLotteryDraw(drawCount, noRepeat, validCandidates) {
+            const selectedNumbers = [];
+
+            if (noRepeat) {
+                for (let i = 0; i < drawCount; i++) {
+                    const randIndex = Math.floor(Math.random() * lotteryPool.length);
+                    selectedNumbers.push(lotteryPool[randIndex]);
+                    lotteryPool.splice(randIndex, 1);
+                }
+                updateLotteryPoolCount();
+            } else {
+                for (let i = 0; i < drawCount; i++) {
+                    const randIndex = Math.floor(Math.random() * validCandidates.length);
+                    selectedNumbers.push(validCandidates[randIndex]);
+                }
+            }
+
+            // 更新舞台卡片與特效
+            const stage = document.getElementById('lottery-stage');
+            const rollElements = stage.querySelectorAll('.roll-number');
+            rollElements.forEach((el, idx) => {
+                el.innerText = selectedNumbers[idx];
+                el.parentElement.classList.add('scale-105', 'shadow-md');
+            });
+
+            // 狀態文字更新
+            const statusPill = document.getElementById('lottery-status-pill');
+            statusPill.innerText = `順利抽出 ${drawCount} 個座號！`;
+            statusPill.className = "text-xs px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200";
+
+            // 加入歷史紀錄
+            addLotteryHistory(selectedNumbers);
+
+            // 復歸按鈕
+            const btn = document.getElementById('btn-do-lottery');
+            btn.disabled = false;
+            btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            isLotteryRolling = false;
+        }
+
+        function addLotteryHistory(numbers) {
+            numbers.forEach(n => {
+                lotteryHistory.push(n);
+            });
+            renderLotteryHistory();
+        }
+
+        function renderLotteryHistory() {
+            const container = document.getElementById('lottery-history-list');
+            if (!container) return;
+            if (lotteryHistory.length === 0) {
+                container.innerHTML = `<p class="col-span-2 text-xs text-stone-400 py-4 text-center">暫無紀錄</p>`;
+                return;
+            }
+
+            container.innerHTML = lotteryHistory.map((num, idx) => {
+                const order = idx + 1;
+                return `
+                    <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-stone-50 border border-stone-200/80 shadow-xs">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-5 h-5 rounded-full bg-rose-500 text-white font-black flex items-center justify-center text-xs shadow-sm">${order}</span>
+                            <span class="text-stone-500 font-bold text-xs">順位</span>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-lg bg-pink-100 font-black text-rose-600 border border-pink-200 text-sm">
+                            ${num} 號
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearLotteryHistory() {
+            lotteryHistory = [];
+            renderLotteryHistory();
         }
 
         function updateStatusTag(text, isOnline) {
