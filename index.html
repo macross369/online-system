@@ -19,15 +19,20 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap');
         
-        body {
+        /* 復原全站預設為古雅襯線體 */
+        body, button, input, select, textarea {
             font-family: 'Noto Serif TC', serif;
-            background-color: #fcfbf9;
-            color: #2b2b2b;
             touch-action: manipulation;
         }
 
-        .font-round {
-            font-family: 'Zen Maru Gothic', 'Noto Serif TC', sans-serif !important;
+        body {
+            background-color: #fcfbf9;
+            color: #2b2b2b;
+        }
+
+        /* 專供表格與抽籤系統使用的可愛圓體 */
+        .font-round, .font-round * {
+            font-family: 'Zen Maru Gothic', sans-serif !important;
         }
 
         .ancient-border {
@@ -85,7 +90,7 @@
 <body class="min-h-screen flex flex-col justify-between selection:bg-sky-100 selection:text-sky-900">
 
     <!-- 全域 Toast 訊息通知 -->
-    <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] pointer-events-none transition-all duration-300 opacity-0 -translate-y-4">
+    <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] pointer-events-none transition-all duration-300 opacity-0 -translate-y-4 font-round">
         <div class="bg-stone-900/90 text-white px-5 py-2.5 rounded-full shadow-2xl backdrop-blur-sm text-sm font-medium flex items-center gap-2 border border-stone-700/50">
             <span id="toast-icon">💡</span>
             <span id="toast-message">系統就緒</span>
@@ -95,7 +100,7 @@
     <!-- 頂端全域導覽列 -->
     <header class="bg-white/95 backdrop-blur-md border-b border-stone-200 sticky top-0 z-40">
         <div class="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between h-16">
-            <!-- 品牌 Logo 與名稱（以圖 3 的人物頭像為首選） -->
+            <!-- 品牌 Logo 與名稱 -->
             <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchMainTab('home')">
                 <img src="logo_2.png" alt="Logo" class="w-8 h-8 rounded-lg object-contain bg-stone-100 border border-stone-200 p-0.5 shadow-sm" onerror="this.onerror=null;this.src='logo.png';">
                 <span class="text-xl font-black tracking-wide text-stone-800">清閒小築線上工具</span>
@@ -103,16 +108,16 @@
 
             <!-- 分頁切換選單 -->
             <nav class="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1">
-                <button onclick="switchMainTab('home')" id="tab-btn-home" class="px-3 py-2 text-sm sm:text-base font-semibold text-stone-600 hover:text-sky-600 transition-colors whitespace-nowrap">
+                <button onclick="switchMainTab('home')" id="tab-btn-home" class="px-3 py-2 text-sm sm:text-base font-bold text-stone-600 hover:text-sky-600 transition-colors whitespace-nowrap">
                     🏠 首頁
                 </button>
-                <button onclick="switchMainTab('quiz')" id="tab-btn-quiz" class="px-3 py-2 text-sm sm:text-base font-semibold text-stone-600 hover:text-sky-600 transition-colors whitespace-nowrap">
+                <button onclick="switchMainTab('quiz')" id="tab-btn-quiz" class="px-3 py-2 text-sm sm:text-base font-bold text-stone-600 hover:text-sky-600 transition-colors whitespace-nowrap">
                     ⚡ 線上搶答
                 </button>
-                <button onclick="switchMainTab('timer')" id="tab-btn-timer" class="px-3 py-2 text-sm sm:text-base font-semibold text-stone-600 hover:text-sky-600 transition-colors whitespace-nowrap">
+                <button onclick="switchMainTab('timer')" id="tab-btn-timer" class="px-3 py-2 text-sm sm:text-base font-bold text-stone-600 hover:text-sky-600 transition-colors whitespace-nowrap">
                     ⏱️ 計時測驗
                 </button>
-                <button onclick="switchMainTab('lottery')" id="tab-btn-lottery" class="px-3 py-2 text-sm sm:text-base font-semibold text-stone-600 hover:text-sky-600 transition-colors whitespace-nowrap font-round">
+                <button onclick="switchMainTab('lottery')" id="tab-btn-lottery" class="px-3 py-2 text-sm sm:text-base font-bold text-stone-600 hover:text-sky-600 transition-colors whitespace-nowrap font-round">
                     🎁 抽籤系統
                 </button>
             </nav>
@@ -129,8 +134,8 @@
                 <p class="text-stone-500 text-sm sm:text-base">專為課堂互動、活動競賽與隨機抽選設計的現代化工具箱</p>
             </div>
 
-            <!-- 目錄表格展示 -->
-            <div class="bg-white rounded-2xl ancient-border overflow-hidden shadow-sm">
+            <!-- 目錄表格展示：僅在此表格套用 font-round（可愛圓體） -->
+            <div class="bg-white rounded-2xl ancient-border overflow-hidden shadow-sm font-round">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-stone-50 border-b border-stone-200 text-stone-600 text-sm">
@@ -154,7 +159,6 @@
                                 掃碼即連！跨 Wi-Fi / 4G 穿透搶答，具備暫停、截斷、加扣分調度及結算金榜。
                             </td>
                             <td class="py-4 px-6 text-right">
-                                <!-- 比照圖示底色：amber 黃金色系 -->
                                 <button onclick="switchMainTab('quiz')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm">
                                     進入搶答 ➔
                                 </button>
@@ -171,10 +175,9 @@
                                 </div>
                             </td>
                             <td class="py-4 px-6 text-stone-500 hidden sm:table-cell">
-                                同步 3-2-1 盲測選手時間感知力，支援全螢幕防作弊遮蔽、手動公布成績與精準誤差榜。
+                                同步 3-2-1 盲測選手時間感知力，支援全螢幕防作弊遮蔽、主控中止、手動公布成績與精準誤差榜。
                             </td>
                             <td class="py-4 px-6 text-right">
-                                <!-- 比照圖示底色：sky 天藍色系 -->
                                 <button onclick="switchMainTab('timer')" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm">
                                     進入測驗 ➔
                                 </button>
@@ -185,17 +188,16 @@
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center text-xl shrink-0">🎁</div>
                                     <div>
-                                        <div class="font-bold text-stone-800 font-round">可愛隨機抽籤趣</div>
-                                        <div class="text-xs text-stone-400 sm:hidden font-round">缺席排除、雙欄中籤紀錄</div>
+                                        <div class="font-bold text-stone-800">可愛隨機抽籤趣</div>
+                                        <div class="text-xs text-stone-400 sm:hidden">缺席排除、雙欄中籤紀錄</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="py-4 px-6 text-stone-500 hidden sm:table-cell font-round">
+                            <td class="py-4 px-6 text-stone-500 hidden sm:table-cell">
                                 專為教師打造！支援座號範圍、例外缺席排除、防重複機制與雙欄位由左至右順序記錄。
                             </td>
                             <td class="py-4 px-6 text-right">
-                                <!-- 比照圖示底色：rose 桃紅/粉紅色系 -->
-                                <button onclick="switchMainTab('lottery')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs sm:text-sm font-bold font-round transition shadow-sm">
+                                <button onclick="switchMainTab('lottery')" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm">
                                     進入抽籤 ➔
                                 </button>
                             </td>
@@ -205,7 +207,7 @@
             </div>
         </section>
 
-        <!-- ======================= 標籤頁 1：線上搶答 ======================= -->
+        <!-- ======================= 標籤頁 1：線上搶答（保持原古雅字體） ======================= -->
         <section id="tab-page-quiz" class="hidden space-y-6">
             <!-- 搶答：大廳選擇身分 -->
             <div id="quiz-view-lobby" class="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-3xl ancient-border space-y-6">
@@ -288,7 +290,6 @@
                 <!-- 大屏主要操作舞台 -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 space-y-6">
-                        <!-- QR Code 與連線舞台 -->
                         <div id="quiz-stage-waiting" class="bg-white p-8 rounded-3xl ancient-border text-center space-y-6 min-h-[380px] flex flex-col items-center justify-center">
                             <p class="font-bold text-stone-600">請上賓掃描 QR Code 或輸入房間號入座</p>
                             <div class="p-3 bg-white border border-stone-200 rounded-2xl shadow-sm inline-block">
@@ -302,7 +303,6 @@
                             </div>
                         </div>
 
-                        <!-- 搶答倒數與進行中舞台 -->
                         <div id="quiz-stage-active" class="hidden bg-white p-8 rounded-3xl ancient-border text-center space-y-6 min-h-[380px] flex flex-col items-center justify-center">
                             <div id="quiz-active-timer-num" class="text-7xl sm:text-9xl font-black text-stone-800 tracking-tight font-mono">10</div>
                             <p id="quiz-active-status-text" class="text-amber-700 font-bold text-lg">搶答進行中... 諸位上賓請按鈕！</p>
@@ -316,7 +316,6 @@
                             </div>
                         </div>
 
-                        <!-- 搶答裁定與調度舞台 -->
                         <div id="quiz-stage-judge" class="hidden bg-white p-8 rounded-3xl ancient-border space-y-6 min-h-[380px] flex flex-col justify-center">
                             <div class="text-center space-y-1">
                                 <span class="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">取得第一答題權</span>
@@ -341,7 +340,6 @@
                         </div>
                     </div>
 
-                    <!-- 右側：序列與榮譽榜 -->
                     <div class="space-y-6">
                         <div class="bg-white p-5 rounded-2xl ancient-border space-y-3">
                             <div class="flex items-center justify-between border-b border-stone-100 pb-2">
@@ -412,7 +410,7 @@
             </div>
         </section>
 
-        <!-- ======================= 標籤頁 2：計時測驗 ======================= -->
+        <!-- ======================= 標籤頁 2：計時測驗（保持原古雅字體） ======================= -->
         <section id="tab-page-timer" class="hidden space-y-6">
             <!-- 計時：大廳身分選擇 -->
             <div id="timer-view-lobby" class="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-3xl ancient-border space-y-6">
@@ -509,7 +507,8 @@
                                     <input type="checkbox" id="timer-hide-scores-toggle" checked class="w-4 h-4 rounded text-sky-600 accent-sky-600">
                                     <span>🔒 隱藏參與者成績 (測驗後手動公布)</span>
                                 </label>
-                                <button onclick="startTimerCountdown()" id="btn-start-timer-test" class="w-full py-3.5 bg-sky-600 hover:bg-sky-700 text-white font-black text-lg rounded-2xl shadow-lg transition tracking-wider">
+                                <!-- 開始測驗按鈕（進行中動態變為中止測驗） -->
+                                <button onclick="toggleTimerTestExecution()" id="btn-start-timer-test" class="w-full py-3.5 bg-sky-600 hover:bg-sky-700 text-white font-black text-lg rounded-2xl shadow-lg transition tracking-wider">
                                     🚀 開始測驗
                                 </button>
                                 <button onclick="revealTimerResultsToAll()" id="btn-reveal-timer-results" class="hidden w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-lg rounded-2xl shadow-xl transition animate-pulse-fast">
@@ -578,7 +577,7 @@
             </div>
         </section>
 
-        <!-- ======================= 標籤頁 3：抽籤系統 ======================= -->
+        <!-- ======================= 標籤頁 3：抽籤系統（套用可愛圓體） ======================= -->
         <section id="tab-page-lottery" class="hidden space-y-6 font-round">
             <div class="text-center space-y-2">
                 <div class="inline-flex items-center gap-2 bg-white px-8 py-3 rounded-full ancient-border shadow-sm">
@@ -705,7 +704,7 @@
 
     <!-- ======================= 全螢幕覆蓋模組 ======================= -->
 
-    <!-- 1. 全螢幕 3-2-1 倒數動畫視窗 -->
+    <!-- 1. 全螢幕 3-2-1 倒數動畫視窗 (主控端與學生端共用) -->
     <div id="global-countdown-overlay" class="fixed inset-0 z-[90] bg-stone-950/95 flex flex-col items-center justify-center hidden select-none">
         <div id="countdown-subtext" class="text-amber-400/80 text-xl font-bold tracking-widest mb-6">準備測驗</div>
         <div id="countdown-main-num" class="text-amber-400 font-black text-9xl sm:text-[14rem] font-mono animate-pulse">3</div>
@@ -728,7 +727,6 @@
 
     <!-- ======================= 核心 JavaScript 邏輯 ======================= -->
     <script>
-        // 明確指定連線伺服器、連接埠與加密協定，確保在任何環境 (本地 file:// 或 GitHub Pages) 均能連線
         const PEER_CONFIG = {
             debug: 1,
             host: '0.peerjs.com',
@@ -808,7 +806,7 @@
             if (activeBtn) activeBtn.classList.add('nav-tab-active');
         }
 
-        /* 倒數動畫 */
+        /* 倒數動畫 (主控端與學生端通用) */
         function runGlobalCountdown(onComplete) {
             const overlay = document.getElementById('global-countdown-overlay');
             const numEl = document.getElementById('countdown-main-num');
@@ -899,7 +897,6 @@
                 btn.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span> 正在開啟房間 [${quizRoomId}]...`;
             }
 
-            // 啟用跨分頁即時通道 (本機或同瀏覽器測試零延遲保障)
             if (typeof BroadcastChannel !== 'undefined') {
                 quizBC = new BroadcastChannel('qxtool_quiz_' + quizRoomId);
                 quizBC.onmessage = (event) => {
@@ -1352,6 +1349,7 @@
         let tmTargetSec = 20;
         let tmStartTime = 0;
         let tmTestActive = false;
+        let tmInCountdown = false;
         let tmTimeoutCheck = null;
         let tmResultsPublished = false;
         let myTmName = '';
@@ -1409,6 +1407,9 @@
             tmConnections = {};
             tmStudents = [];
             tmResultsPublished = false;
+            tmTestActive = false;
+            tmInCountdown = false;
+            resetTimerHostBtnState();
 
             tmRoomId = Math.floor(1000 + Math.random() * 9000).toString();
             const fullPeerId = TIMER_PREFIX + tmRoomId;
@@ -1567,6 +1568,32 @@
             `).join('');
         }
 
+        // 重設主控端測驗按鈕為「開始測驗」狀態
+        function resetTimerHostBtnState() {
+            const btn = document.getElementById('btn-start-timer-test');
+            if (!btn) return;
+            btn.innerHTML = `🚀 開始測驗`;
+            btn.className = "w-full py-3.5 bg-sky-600 hover:bg-sky-700 text-white font-black text-lg rounded-2xl shadow-lg transition tracking-wider";
+        }
+
+        // 切換主控端測驗按鈕為「中止測驗」狀態
+        function setTimerHostBtnAbortState() {
+            const btn = document.getElementById('btn-start-timer-test');
+            if (!btn) return;
+            btn.innerHTML = `🛑 中止測驗`;
+            btn.className = "w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-lg rounded-2xl shadow-lg transition tracking-wider animate-pulse";
+        }
+
+        // 築主點擊按鈕分流：開始測驗 或 中止測驗
+        function toggleTimerTestExecution() {
+            if (tmTestActive || tmInCountdown) {
+                abortTimerTest();
+            } else {
+                startTimerCountdown();
+            }
+        }
+
+        // 啟動 3-2-1 倒數計時並廣播給全體學生端
         function startTimerCountdown() {
             if (!tmStudents.length) {
                 showAppToast('尚無上賓入座，請先讓學生加入房間', '⚠️');
@@ -1577,9 +1604,17 @@
             tmStudents.forEach(s => { s.recordedSec = null; s.diff = null; s.responded = false; });
             updateTimerTeacherUI();
 
+            tmInCountdown = true;
+            setTimerHostBtnAbortState();
+
+            // 廣播給學生機同步啟動 3-2-1 倒數動畫
+            broadcastToTimerStudents({ type: 'TM_COUNTDOWN', targetSec: tmTargetSec });
+
             runGlobalCountdown(() => {
+                tmInCountdown = false;
                 tmTestActive = true;
                 tmStartTime = performance.now();
+                // 倒數結束，廣播給學生正式進入盲測狀態
                 broadcastToTimerStudents({ type: 'TM_START', targetSec: tmTargetSec });
 
                 clearTimeout(tmTimeoutCheck);
@@ -1590,9 +1625,31 @@
             });
         }
 
+        // 中止測驗功能
+        function abortTimerTest() {
+            clearTimeout(tmTimeoutCheck);
+            tmInCountdown = false;
+            tmTestActive = false;
+            resetTimerHostBtnState();
+
+            // 關閉可能正在播放的倒數動畫
+            document.getElementById('global-countdown-overlay').classList.add('hidden');
+
+            // 廣播給學生端中止測驗
+            broadcastToTimerStudents({ type: 'TM_ABORT' });
+            showAppToast('測驗已由築主中止', '🛑');
+
+            // 重置未完成學生的狀態
+            tmStudents.forEach(s => { s.recordedSec = null; s.diff = null; s.responded = false; });
+            updateTimerTeacherUI();
+        }
+
         function finishTimerTestPhase() {
             clearTimeout(tmTimeoutCheck);
             tmTestActive = false;
+            tmInCountdown = false;
+            resetTimerHostBtnState();
+
             tmStudents.forEach(s => {
                 if (!s.responded) {
                     s.recordedSec = tmTargetSec + 10;
@@ -1651,6 +1708,9 @@
         function restartTimerGame() {
             tmStudents.forEach(s => { s.recordedSec = null; s.diff = null; s.responded = false; });
             tmResultsPublished = false;
+            tmTestActive = false;
+            tmInCountdown = false;
+            resetTimerHostBtnState();
             updateTimerTeacherUI();
             switchTimerView('timer-view-teacher-dash');
             broadcastToTimerStudents({ type: 'TM_RESET' });
@@ -1729,17 +1789,31 @@
             } else if (data.type === 'TM_JOIN_REJECT') {
                 showAppToast(data.reason, '⚠️');
                 leaveTimer();
+            } else if (data.type === 'TM_COUNTDOWN') {
+                // 收到築主發動倒數指令，學生機同步播放 3-2-1 動畫
+                runGlobalCountdown();
             } else if (data.type === 'TM_START') {
+                // 倒數完畢，切換至全螢幕遮蔽盲測介面
+                document.getElementById('global-countdown-overlay').classList.add('hidden');
                 overlay.classList.remove('hidden');
                 document.getElementById('btn-overlay-timer-press').disabled = false;
                 document.getElementById('tm-overlay-status').innerText = "請用心感受時間... 覺得時間到達時請點擊按鈕！";
+            } else if (data.type === 'TM_ABORT') {
+                // 築主中止測驗，關閉全螢幕遮蔽與倒數
+                document.getElementById('global-countdown-overlay').classList.add('hidden');
+                overlay.classList.add('hidden');
+                pressBtn.disabled = true;
+                statusEl.innerText = "🛑 築主已中止本輪測驗，請稍候...";
+                showAppToast('築主已中止本次測驗', '🛑');
             } else if (data.type === 'TM_PUBLISH_RESULTS') {
+                document.getElementById('global-countdown-overlay').classList.add('hidden');
                 overlay.classList.add('hidden');
                 tmStudents = data.students;
                 tmTargetSec = data.targetSec;
                 renderTimerFinalResults();
                 switchTimerView('timer-view-final-result');
             } else if (data.type === 'TM_RESET') {
+                document.getElementById('global-countdown-overlay').classList.add('hidden');
                 overlay.classList.add('hidden');
                 pressBtn.disabled = true;
                 statusEl.innerText = "等待築主發起測驗...";
@@ -1765,6 +1839,7 @@
 
         function leaveTimer() {
             document.getElementById('timer-student-fullscreen-overlay').classList.add('hidden');
+            document.getElementById('global-countdown-overlay').classList.add('hidden');
             if (timerBC) { try { timerBC.close(); } catch(e){} timerBC = null; }
             if (tmConn) tmConn.close();
             if (tmPeer) { tmPeer.destroy(); tmPeer = null; }
