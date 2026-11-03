@@ -110,6 +110,34 @@
         <div id="countdown-num-display" class="text-9xl font-black text-amber-400 font-mono tracking-tighter animate-count-pop">3</div>
     </div>
 
+    <!-- 上賓專用：全螢幕專注測驗覆蓋層 (遮蔽設備時間防作弊) -->
+    <div id="tm-fullscreen-test-modal" class="fixed inset-0 bg-stone-950 z-[80] flex flex-col items-center justify-between p-6 sm:p-8 text-white select-none hidden">
+        <!-- 頂端資訊區 -->
+        <div class="text-center space-y-2 pt-4">
+            <h3 id="tm-fs-student-name" class="text-xl font-bold text-stone-200">🍵 上賓</h3>
+            <div class="inline-block bg-sky-950/80 text-sky-300 border border-sky-500/40 px-5 py-2 rounded-full font-black text-xl shadow-lg">
+                🎯 目標時間：<span id="tm-fs-target-display">--</span> 秒
+            </div>
+            <p id="tm-fs-status-hint" class="text-sm font-bold text-amber-400 animate-pulse pt-1">測驗進行中！默數秒數並按下按鈕！</p>
+        </div>
+
+        <!-- 中央超大按鈕 -->
+        <div class="flex flex-col items-center justify-center my-auto">
+            <button id="tm-fs-btn-trigger" onclick="tmStudentSendSubmit()" class="timer-btn w-64 h-64 sm:w-72 sm:h-72 rounded-full flex flex-col items-center justify-center text-white font-black text-3xl sm:text-4xl tracking-wider space-y-3 transition transform active:scale-95 shadow-2xl">
+                <span>⏱️ 時間到！</span>
+                <span class="text-xs sm:text-sm font-normal opacity-80">憑感覺按下按鈕</span>
+            </button>
+        </div>
+
+        <!-- 底端狀態 -->
+        <div class="pb-6 text-center">
+            <div class="bg-stone-900/90 border border-stone-800 rounded-2xl px-8 py-3.5 shadow-md">
+                <span class="text-xs text-stone-400 font-bold block mb-0.5">紀錄狀態</span>
+                <span id="tm-fs-record-display" class="text-xl font-black text-sky-400">測驗進行中...</span>
+            </div>
+        </div>
+    </div>
+
     <!-- 頂端導航列與標籤頁 -->
     <header class="w-full bg-white/80 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -999,6 +1027,41 @@
             document.getElementById('countdown-modal').classList.add('hidden');
         }
 
+        // 全螢幕專注遮蔽層控制 (防設備時間作弊)
+        function requestFullScreenSafe() {
+            try {
+                if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+            } catch(e) {}
+        }
+
+        function exitFullScreenSafe() {
+            try {
+                if (document.fullscreenElement && document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                }
+            } catch(e) {}
+        }
+
+        function showTmFullscreenOverlay() {
+            const modal = document.getElementById('tm-fullscreen-test-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.getElementById('tm-fs-student-name').innerText = `🍵 ${tmMyName || '上賓'}`;
+                document.getElementById('tm-fs-target-display').innerText = tmTargetSec;
+                requestFullScreenSafe();
+            }
+        }
+
+        function hideTmFullscreenOverlay() {
+            const modal = document.getElementById('tm-fullscreen-test-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            exitFullScreenSafe();
+        }
+
         function destroyPeer(instance) {
             if (instance) {
                 try {
@@ -1758,8 +1821,8 @@
                 const champRecord = champions[0].recordSec.toFixed(2);
                 const champDiff = champions[0].diff.toFixed(2);
 
-                document.getElementById('champion-names').innerText = champNames;
-                document.getElementById('champion-detail').innerText = `紀錄秒數：${champRecord} 秒 (誤差: ${champDiff} 秒)`;
+                document.getElementById('tm-champion-names').innerText = champNames;
+                document.getElementById('tm-champion-detail').innerText = `紀錄秒數：${champRecord} 秒 (誤差: ${champDiff} 秒)`;
             } else {
                 document.getElementById('tm-champion-names').innerText = "無人完成按鈕";
                 document.getElementById('tm-champion-detail').innerText = "";
@@ -1785,7 +1848,7 @@
                             ${isMe ? '<span class="text-xs px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-bold border border-sky-300">個人成績</span>' : ''}
                         </div>
                         <div class="text-right">
-                            <span class="font-mono font-black text-sky-700 block">${st.recordSec ? st.recordSec.toFixed(2) + ' 秒' : '未按下'}</span>
+                            <span class="font-mono font-black text-sky-700 block">${st.recordSec !== null ? st.recordSec.toFixed(2) + ' 秒' : '未按下'}</span>
                             <span class="text-xs text-stone-400 font-bold">誤差 ${diffSign}</span>
                         </div>
                     </div>
@@ -1808,6 +1871,7 @@
                 broadcastTmStateToStudents();
                 updateTmTeacherDashUI();
             } else {
+                hideTmFullscreenOverlay();
                 switchTimerView('tm-view-student-dash');
             }
         }
@@ -1870,20 +1934,29 @@
                 document.getElementById('tm-student-target-display').innerText = tmTargetSec;
             } else if (data.type === 'TM_SYNC') {
                 const tmBtn = document.getElementById('tm-btn-trigger');
+                const fsBtn = document.getElementById('tm-fs-btn-trigger');
                 const statusHint = document.getElementById('tm-student-status-hint');
+                const fsStatusHint = document.getElementById('tm-fs-status-hint');
+
                 tmTargetSec = data.targetSec;
                 document.getElementById('tm-student-target-display').innerText = tmTargetSec;
+                document.getElementById('tm-fs-target-display').innerText = tmTargetSec;
 
                 if (data.tmState === 'WAITING') {
                     tmBtn.disabled = true;
+                    if (fsBtn) fsBtn.disabled = true;
                     hideCountdownModal();
+                    hideTmFullscreenOverlay();
                     statusHint.innerText = "等待築主啟動測驗...";
                     statusHint.className = "text-sm font-bold text-stone-500";
                     document.getElementById('tm-student-record-display').innerText = "-- 秒";
                     switchTimerView('tm-view-student-dash');
                 } else if (data.tmState === 'COUNTDOWN') {
                     switchTimerView('tm-view-student-dash');
+                    showTmFullscreenOverlay();
                     tmBtn.disabled = true;
+                    if (fsBtn) fsBtn.disabled = true;
+
                     if (data.tmCountdownVal > 0) {
                         showCountdownModal(data.tmCountdownVal);
                     } else {
@@ -1891,37 +1964,54 @@
                     }
                     statusHint.innerText = "準備中，即將開始...";
                     statusHint.className = "text-sm font-bold text-amber-600 animate-pulse";
+                    if (fsStatusHint) {
+                        fsStatusHint.innerText = "準備中，倒數結束即開始...";
+                    }
                 } else if (data.tmState === 'RUNNING') {
                     hideCountdownModal();
-                    switchTimerView('tm-view-student-dash');
+                    showTmFullscreenOverlay();
+
                     const myInfo = data.tmStudents.find(s => s.name === tmMyName);
                     if (myInfo && myInfo.recordSec !== null) {
                         tmBtn.disabled = true;
+                        if (fsBtn) fsBtn.disabled = true;
                         
                         if (data.tmHideScores) {
                             statusHint.innerText = "已成功完成紀錄！等待築主公布成績...";
                             statusHint.className = "text-sm font-bold text-amber-700";
                             document.getElementById('tm-student-record-display').innerText = "已登記 (隱藏中)";
+                            if (fsStatusHint) fsStatusHint.innerText = "已完成按鈕！等待築主公布成績...";
+                            document.getElementById('tm-fs-record-display').innerText = "已完成紀錄 (隱藏中)";
                         } else {
                             statusHint.innerText = "已完成紀錄！等待全體學生與結算...";
                             statusHint.className = "text-sm font-bold text-sky-700";
                             document.getElementById('tm-student-record-display').innerText = `${myInfo.recordSec.toFixed(2)} 秒`;
+                            if (fsStatusHint) fsStatusHint.innerText = "已完成按鈕！等待結算榜單...";
+                            document.getElementById('tm-fs-record-display').innerText = `${myInfo.recordSec.toFixed(2)} 秒`;
                         }
                     } else {
                         if (tmBtn.disabled) {
                             tmStartTime = performance.now();
                         }
                         tmBtn.disabled = false;
+                        if (fsBtn) fsBtn.disabled = false;
+
                         statusHint.innerText = "測驗進行中！默數秒數並按下按鈕！";
                         statusHint.className = "text-sm font-bold text-emerald-600 animate-pulse-light";
+                        if (fsStatusHint) fsStatusHint.innerText = "測驗進行中！請默數秒數並點擊按鈕！";
+                        document.getElementById('tm-fs-record-display').innerText = "測驗進行中...";
                     }
                 } else if (data.tmState === 'FINISHED_WAITING_REVEAL') {
                     hideCountdownModal();
                     tmBtn.disabled = true;
+                    if (fsBtn) fsBtn.disabled = true;
+
                     statusHint.innerText = "測驗已結束，等待築主手動公布成績...";
                     statusHint.className = "text-sm font-bold text-amber-600 animate-pulse-light";
+                    if (fsStatusHint) fsStatusHint.innerText = "測驗已結束，等待築主公布成績...";
                 } else if (data.tmState === 'FINISHED') {
                     hideCountdownModal();
+                    hideTmFullscreenOverlay();
                     tmStudents = data.tmStudents;
                     showTmFinalResult();
                 }
@@ -1935,18 +2025,26 @@
                     type: 'TM_SUBMIT',
                     recordSec: elapsedSec
                 });
+
                 document.getElementById('tm-btn-trigger').disabled = true;
+                const fsBtn = document.getElementById('tm-fs-btn-trigger');
+                if (fsBtn) fsBtn.disabled = true;
                 
                 if (tmHideScores) {
                     document.getElementById('tm-student-record-display').innerText = "已登記 (隱藏中)";
+                    document.getElementById('tm-fs-record-display').innerText = "已完成紀錄 (隱藏中)";
+                    document.getElementById('tm-fs-status-hint').innerText = "已完成按鈕！等待築主公布成績...";
                 } else {
                     document.getElementById('tm-student-record-display').innerText = `${elapsedSec.toFixed(2)} 秒`;
+                    document.getElementById('tm-fs-record-display').innerText = `${elapsedSec.toFixed(2)} 秒`;
+                    document.getElementById('tm-fs-status-hint').innerText = "已完成按鈕！等待結算榜單...";
                 }
             }
         }
 
         function confirmReturnHome() {
             if (confirm("諸葛軍師詢問：確定要返回大廳嗎？連線將會中斷。")) {
+                hideTmFullscreenOverlay();
                 window.location.href = window.location.pathname;
             }
         }
